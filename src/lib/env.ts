@@ -11,6 +11,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GITHUB_CLIENT_ID: z.string().min(1),
     GITHUB_CLIENT_SECRET: z.string().min(1),
+    RESEND_API_KEY: z.string().min(1),
+    RESEND_FROM_EMAIL: z.string().email(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -19,5 +21,7 @@ export const env = createEnv({
     GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
   },
 });
