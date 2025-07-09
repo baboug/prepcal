@@ -13,9 +13,11 @@ export function Navbar({ links }: NavbarProps) {
       <Logo />
       <div className="flex items-center gap-4">
         {links?.map((link) => (
-          <Button asChild key={link.href} type="button" variant="outline">
-            <Link href={link.href}>{link.label}</Link>
-          </Button>
+          <Link href={link.href} key={link.href}>
+            <Button type="button" variant="outline">
+              {link.label}
+            </Button>
+          </Link>
         ))}
       </div>
     </nav>

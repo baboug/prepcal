@@ -27,7 +27,7 @@ const item = {
 export function Hero() {
   return (
     <motion.header animate="show" className="container mx-auto p-4" initial="hidden" variants={container}>
-      <Navbar links={[{ label: "Sign in", href: "/sign-in" }]} />
+      <Navbar links={[{ label: "Sign in", href: "/auth/sign-in" }]} />
       <div className="flex flex-col gap-4 lg:flex-row">
         <motion.div className="flex-1" variants={item}>
           <TitleSection />

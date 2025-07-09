@@ -48,9 +48,9 @@ export function TitleSection() {
           </motion.p>
         </div>
       </div>
-      <Button asChild size="lg">
-        <Link href="/sign-up">Start meal planning</Link>
-      </Button>
+      <Link href="/auth/sign-up">
+        <Button size="lg">Start meal planning</Button>
+      </Link>
     </div>
   );
 }
