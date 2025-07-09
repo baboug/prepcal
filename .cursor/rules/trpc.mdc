@@ -1,0 +1,412 @@
+---
+description: How to use data fetching and mutating using tRPC
+globs: 
+alwaysApply: false
+---
+# tRPC
+
+- Use tRPC with tanstack react-query for all data fetching and mutation
+
+## Data Fetching
+
+### Server Side
+- Server components should use the tRPC client and getQueryClient located at `@/lib/trpc/server` to prefetch the data.
+- Server side data prefetching:
+
+  ```typescript
+  import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+  import { headers } from "next/headers";
+  import { redirect } from "next/navigation";
+  import { Suspense } from "react";
+  import { ErrorBoundary } from "react-error-boundary";
+
+  import { auth } from "@/lib/auth";
+  import {
+    MealPlansView,
+    MealPlansViewError,
+    MealPlansViewSkeleton,
+  } from "@/modules/meal-plans/ui/views/meal-plans-view";
+  import { getQueryClient, trpc } from "@/lib/trpc/server";
+
+  export default async function MealPlansPage() {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      redirect("/sign-in");
+    }
+
+    const queryClient = getQueryClient();
+    void queryClient.prefetchQuery(
+      trpc.mealPlans.getMany.queryOptions()
+    );
+
+    return (
+      <>
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <Suspense fallback={<MealPlansViewSkeleton />}>
+            <ErrorBoundary fallback={<MealPlansViewError />}>
+              <MealPlansView />
+            </ErrorBoundary>
+          </Suspense>
+        </HydrationBoundary>
+      </>
+    );
+  }
+  ```
+
+### Client Side
+- Client components should use the useTRPC hook located at `@/lib/trpc/client` for data fetching.
+- Client side data fetching:
+
+  ```typescript
+  "use client";
+
+  import { useSuspenseQuery } from "@tanstack/react-query";
+  import { useRouter } from "next/navigation";
+
+  import { EmptyState } from "@/components/empty-state";
+  import { ErrorState } from "@/components/error-state";
+  import { Skeleton } from "@/components/ui/skeleton";
+  import { useTRPC } from "@/lib/trpc/client";
+
+  export function MealPlansView() {
+    const trpc = useTRPC();
+    const { data } = useSuspenseQuery(
+      trpc.mealPlans.getMany.queryOptions()
+    );
+
+    return (
+      <div className="flex-1 pb-4 px-4 md:px-8 flex flex-col gap-y-4">
+        <MealPlansGrid data={data.items} />
+        {data.items.length === 0 && (
+          <EmptyState
+            title="Create your first meal plan"
+            description="Create a meal plan to start your new fitness journey."
+          />
+        )}
+      </div>
+    );
+  }
+
+  export function MealPlansViewSkeleton() {
+    return (
+      <div>
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+    );
+  }
+
+  export function MealPlansViewError() {
+    return (
+      <ErrorState
+        title="Error loading meal plans"
+        description="Something went wrong"
+      />
+    );
+  }
+
+  ```
+
+## Data Mutation
+- Use the useTRPC hook located at `@/lib/trpc/client` for data mutation:
+
+  ```typescript
+  "use client";
+
+  import { zodResolver } from "@hookform/resolvers/zod";
+  import { useMutation, useQueryClient } from "@tanstack/react-query";
+  import { useForm } from "react-hook-form";
+  import { toast } from "sonner";
+  import { z } from "zod";
+
+  import { Button } from "@/components/ui/button";
+  import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+  } from "@/components/ui/form";
+  import { Input } from "@/components/ui/input";
+  import { Textarea } from "@/components/ui/textarea";
+  import { useTRPC } from "@/lib/trpc/client";
+  import { recipesInsertSchema } from "../../schemas";
+  import { RecipeGetOne } from "../../types";
+
+  interface RecipeFormProps {
+    onSuccess?: () => void;
+    initialValues?: RecipeGetOne;
+  }
+
+  export function RecipeForm({
+    onSuccess,
+    initialValues,
+  }: RecipeFormProps) {
+    const trpc = useTRPC();
+    const queryClient = useQueryClient();
+
+    const createRecipe = useMutation(
+      trpc.recipes.create.mutationOptions({
+        onSuccess: async () => {
+          await queryClient.invalidateQueries(
+            trpc.recipes.getMany.queryOptions({})
+          );
+
+          onSuccess?.();
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      })
+    );
+
+    const updateRecipe = useMutation(
+      trpc.recipes.update.mutationOptions({
+        onSuccess: async () => {
+          await queryClient.invalidateQueries(
+            trpc.recipes.getMany.queryOptions({})
+          );
+
+          if (initialValues?.id) {
+            await queryClient.invalidateQueries(
+              trpc.recipes.getOne.queryOptions({
+                id: initialValues.id,
+              })
+            );
+          }
+
+          onSuccess?.();
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      })
+    );
+
+    const form = useForm<z.infer<typeof recipesInsertSchema>>({
+      resolver: zodResolver(recipesInsertSchema),
+      defaultValues: {
+        name: initialValues?.name ?? "",
+        instructions: initialValues?.instructions ?? "",
+      },
+    });
+
+    const isEdit = !!initialValues?.id;
+    const isLoading = createRecipe.isPending || updateRecipe.isPending;
+
+    const onSubmit = (values: z.infer<typeof recipesInsertSchema>) => {
+      if (isEdit) {
+        updateRecipe.mutate({ ...values, id: initialValues.id });
+      } else {
+        createRecipe.mutate(values);
+      }
+    };
+
+    return (
+      <Form {...form}>
+        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g. Tacos" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="instructions"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Instructions</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder="e.g. 1. Fry minced beef"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button isLoading={isLoading} disabled={isLoading} type="submit">
+            {isEdit ? "Update" : "Create"}
+          </Button>
+        </form>
+      </Form>
+    );
+  }
+
+  ```
+
+## Procedures
+- Use the public, protected, or premium procedures located at `@/lib/trpc/init` for authorization
+
+### Format
+- Create tRPC procedures in the following format:
+
+  ```typescript
+  import { and, count, desc, eq, getTableColumns, ilike, sql } from "drizzle-orm";
+  import z from "zod";
+
+  import {
+    DEFAULT_PAGE,
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+    MIN_PAGE_SIZE,
+  } from "@/constants";
+  import { db } from "@/db";
+  import { foods } from "@/db/schema";
+  import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
+  import { TRPCError } from "@trpc/server";
+  import { foodsInsertSchema, foodsUpdateSchema } from "../schemas";
+
+  export const foodsRouter = createTRPCRouter({
+    update: protectedProcedure
+      .input(foodsUpdateSchema)
+      .mutation(async ({ input, ctx }) => {
+        const [updatedFood] = await db
+          .update(foods)
+          .set(input)
+          .where(
+            and(eq(foods.id, input.id), eq(foods.userId, ctx.auth.user.id))
+          )
+          .returning();
+
+        if (!updatedFood) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Food not found",
+          });
+        }
+
+        return updatedFood;
+      }),
+
+    remove: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const [removedFood] = await db
+          .delete(foods)
+          .where(
+            and(eq(foods.id, input.id), eq(foods.userId, ctx.auth.user.id))
+          )
+          .returning();
+
+        if (!removedFood) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Food not found",
+          });
+        }
+
+        return removedFood;
+      }),
+
+    getOne: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .query(async ({ input, ctx }) => {
+        const [existingFood] = await db
+          .select()
+          .from(foods)
+          .where(
+            and(eq(foods.id, input.id), eq(foods.userId, ctx.auth.user.id))
+          );
+
+        if (!existingFood) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Food not found",
+          });
+        }
+
+        return existingFood;
+      }),
+
+    getMany: protectedProcedure
+      .input(
+        z.object({
+          page: z.number().default(DEFAULT_PAGE),
+          pageSize: z
+            .number()
+            .min(MIN_PAGE_SIZE)
+            .max(MAX_PAGE_SIZE)
+            .default(DEFAULT_PAGE_SIZE),
+          search: z.string().nullish(),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const { page, pageSize, search } = input;
+
+        const data = await db
+          .select()
+          .from(foods)
+          .where(
+            and(
+              eq(foods.userId, ctx.auth.user.id),
+              search ? ilike(foods.name, `%${search}%`) : undefined
+            )
+          )
+          .orderBy(desc(foods.createdAt), desc(foods.id))
+          .limit(pageSize)
+          .offset((page - 1) * pageSize);
+
+        const [total] = await db
+          .select({ count: count() })
+          .from(foods)
+          .where(
+            and(
+              eq(foods.userId, ctx.auth.user.id),
+              search ? ilike(foods.name, `%${search}%`) : undefined
+            )
+          );
+
+        const totalPages = Math.ceil(total.count / pageSize);
+
+        return {
+          items: data,
+          total: total.count,
+          totalPages,
+        };
+      }),
+
+    create: protectedProcedure
+      .input(foodsInsertSchema)
+      .mutation(async ({ input, ctx }) => {
+        const [createdFood] = await db
+          .insert(foods)
+          .values({
+            ...input,
+            userId: ctx.auth.user.id,
+          })
+          .returning();
+
+        return createdFood;
+      }),
+  });
+
+  ```
+
+## Types
+- For types that will be used based on the data fetching results, infer them based on the procedures in a types.ts file in the module e.g. `@/modules/foods/types.ts`
+
+  ```typescript
+  import { inferRouterOutputs } from "@trpc/server";
+
+  import type { AppRouter } from "@/lib/trpc/routers/_app";
+
+  export type FoodGetOne = inferRouterOutputs<AppRouter>["foods"]["getOne"];
+  export type FoodGetMany =
+    inferRouterOutputs<AppRouter>["foods"]["getMany"]["items"];
+
+  ```

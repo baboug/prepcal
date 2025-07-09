@@ -1,0 +1,57 @@
+---
+description: Project structure and file organization guidelines
+globs: 
+alwaysApply: false
+---
+# Project Structure
+
+## Main Structure
+
+- The `src/app` folder only contains the pages and layouts, and no feature related code
+- All code related to a feature is in the modules folder e.g. `src/modules/meal-plans`
+
+```tree
+
+src/
+│── app/              # Main application pages
+│   ├── (auth)/       # Auth pages
+│   ├── (dashboard)/  # Pages for logged in users
+│   ├── (marketing)/  # Marketing pages
+│   └── ...           # (other app routes e.g. api routes)
+├── modules/          # App features e.g. recipes
+├── lib/              # Configurations of libraries (tRPC, etc.)
+├── public/           # Static assets (images, etc.)
+├── components/       # Reusable components
+├── hooks/            # Reusable custom React hooks
+├── next.config.ts
+├── package.json
+└── ... (config files)
+
+```
+
+## Modules
+- Colocate all files related to a feature in it's modules folder in the following structure:
+- **server/**: Server related code is in the server folder e.g. `src/modules/meal-plans/server/`. The server code is organized using a layered architecture: procedures -> service -> repository.
+- **server/feature-procedures.ts**: tRPC procedures for the feature are kept in e.g. `src/modules/meal-plans/server/meal-plans-procedures.ts`. The procedures act as simple routers and validate inputs, delegate logic to service functions, and then return results or throw errors.
+- **server/feature-service.ts**: The feature service e.g. `src/modules/meal-plans/server/meal-plans-service.ts` exports functions reponsible for logic related to the feature. The service interacts with the database through the repository or external services such as background jobs or email.
+- **server/feature-repository.ts**: The feature repository e.g. `src/modules/meal-plans/server/meal-plans-repository.ts` exports functions reponsible for interacting with the database using Drizzle ORM.
+- **ui/**: UI related code is in the ui folder e.g. `src/modules/meal-plans/ui/` with folders for components, hooks, views and layouts.
+- **ui/components/**: Feature related components are kept in the components folder e.g. `src/modules/meal-plans/ui/components/`.
+- **ui/views/**: Feature related views that act as container components and are used in pages are kept in the views folder e.g. `src/modules/meal-plans/ui/views/`.
+- **ui/layouts/**: Feature related layouts are kept in the layouts folder e.g. `src/modules/meal-plans/ui/layouts/`.
+- **ui/hooks/**: Feature related hooks are kept in the hooks folder e.g. `src/modules/meal-plans/ui/hooks/`.
+- **utils/**: Feature related utils are kept in separate files in the utils folder e.g. `src/modules/meal-plans/utils/`.
+- **constants.ts**: Feature related constants are kept in the constants file e.g. `src/modules/meal-plans/constants.ts`.
+- **schemas.ts**: Feature related Zod schemas are kept in the schemas file e.g. `src/modules/meal-plans/schemas.ts`.
+- **types.ts**: Feature related types are kept in the types file e.g. `src/modules/meal-plans/types.ts`.
+- **params.ts**: Feature related nuqs params are kept in the params file e.g. `src/modules/meal-plans/params.ts`.
+
+## File Naming and Organization
+
+- Use kebab case for all files (e.g., `lib/env.ts` or `components/toggle-group.tsx`)
+- Shadcn components are in `components/ui`
+- All other reusable components are in `components/`
+- If a component can be used in many places, place it in the `components` folder
+- Create utility functions in the `lib/utils.ts` file for reusable logic
+- Create reusable constants in the `lib/constants.ts` file
+- Create reusable types in the `lib/types.ts` file

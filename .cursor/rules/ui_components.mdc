@@ -1,0 +1,13 @@
+---
+description: UI component and styling guidelines using Shadcn UI, Radix UI, and Tailwind
+globs: 
+alwaysApply: false
+---
+# UI Components and Styling
+
+## UI Framework
+- Use Shadcn UI and Tailwind for components and styling
+- Implement responsive design with Tailwind CSS using a mobile-first approach
+- Use `next/image` package for images
+- Favor named exports for components.
+- Use lucide-react for icons and import them with Icon as the suffix e.g. `CheckIcon`

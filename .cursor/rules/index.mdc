@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Master Rule Index
+
+This document serves as the central index for all active Cursor rules within this repository, organized by category. These rules define processes, structures, and guidelines for development.
+
+## Core & General
+
+Fundamental project structure, setup, and general development guidelines.
+
+| Rule File                          | Description                                                 |
+| :--------------------------------- | :---------------------------------------------------------- |
+| [nextjs.mdc](mdc:.cursor/rules/nextjs.mdc)                        | Next.js guidelines                                          |
+| [project_structure.mdc](mdc:.cursor/rules/project_structure.mdc)             | Project structure and file organization guidelines          |
+| [installing_packages.mdc](mdc:.cursor/rules/installing_packages.mdc)           | How to install packages                                     |
+| [environment_variables.mdc](mdc:.cursor/rules/environment_variables.mdc)         | How to add environment variable                             |
+| [auth.mdc](mdc:.cursor/rules/auth.mdc)                          | How to use auth using better-auth                           |
+| [cursor_rules.mdc](mdc:.cursor/rules/cursor_rules.mdc)                  | How to create or edit Cursor rules                          |
+
+## Frontend & UI
+
+Guidelines for building user interfaces and handling frontend logic.
+
+| Rule File                          | Description                                                 |
+| :--------------------------------- | :---------------------------------------------------------- |
+| [ui_components.mdc](mdc:.cursor/rules/ui_components.mdc)                 | UI component and styling guidelines (Shadcn, Tailwind)      |
+| [nuqs.mdc](mdc:.cursor/rules/nuqs.mdc)                          | Search params state management using nuqs                   |
+
+## Backend & API
+
+Guidelines for implementing backend logic, APIs, and data persistence.
+
+| Rule File                          | Description                                                 |
+| :--------------------------------- | :---------------------------------------------------------- |
+| [trpc.mdc](mdc:.cursor/rules/trpc.mdc)                          | How to structure API code using tRPC                        |
+| [drizzle.mdc](mdc:.cursor/rules/drizzle.mdc)                       | How to use the database using Drizzle ORM                   |
+
+## Testing
+
+General guidelines for application testing.
+
+| Rule File                          | Description                                                 |
+| :--------------------------------- | :---------------------------------------------------------- |
+| [testing.mdc](mdc:.cursor/rules/testing.mdc)                       | Guidelines for testing the application with Vitest          |

@@ -1,0 +1,49 @@
+---
+description: How to use authentication and authorization using better-auth
+globs: 
+alwaysApply: false
+---
+# Auth
+
+- Use better-auth for authentication
+- The auth-client is used to perform actions such as client side authorization,sign in, or sign out. The auth-client is located at `@/lib/auth-client`.
+- To perform actions such as sign in or sign out use the authClient.
+
+## Authorization
+
+- Client side authorization:
+
+  ```typescript
+  import { authClient } from "@/lib/auth-client";
+
+  export function User(){
+    const { data: session } = authClient.useSession()
+
+    return (
+        //...
+    )
+  }
+  ```
+
+- Server side authorization:
+
+  ```typescript
+  import { headers } from "next/headers";
+  import { redirect } from "next/navigation";
+
+  import { auth } from "@/lib/auth";
+
+  export function MealPlanPage(){
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      redirect("/sign-in");
+    }
+
+    return (
+        //...
+    )
+  }
+  ```

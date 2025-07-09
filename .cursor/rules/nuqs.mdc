@@ -1,0 +1,115 @@
+---
+description: How to use search params state using nuqs
+globs: 
+alwaysApply: false
+---
+# nuqs
+
+- Use 'nuqs' for URL search parameter state management.
+
+## Server side
+
+- For server components define search params in a params.ts file in the related module e.g. `@/modules/recipes/params.ts`:
+
+  ```typescript
+  import { DEFAULT_PAGE } from "@/constants";
+  import { parseAsString, parseAsInteger, createLoader } from "nuqs/server";
+
+  export const filtersSearchParams = {
+    search: parseAsString.withDefault("").withOptions({
+      clearOnDefault: true,
+    }),
+    page: parseAsInteger.withDefault(DEFAULT_PAGE).withOptions({
+      clearOnDefault: true,
+    }),
+  };
+
+  export const loadSearchParams = createLoader(filtersSearchParams);
+
+  ```
+
+- Then to use the nuqs params server side:
+  ```typescript
+  import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+  import { headers } from "next/headers";
+  import { redirect } from "next/navigation";
+  import { SearchParams } from "nuqs";
+  import { Suspense } from "react";
+  import { ErrorBoundary } from "react-error-boundary";
+
+  import { auth } from "@/lib/auth";
+  import { loadSearchParams } from "@/modules/recipes/params";
+  import { getQueryClient, trpc } from "@/lib/trpc/server";
+
+  interface RecipesPageProps {
+    searchParams: Promise<SearchParams>;
+  }
+
+  export default async function RecipesPage({ searchParams }: RecipesPageProps) {
+    const filters = await loadSearchParams(searchParams);
+
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      redirect("/sign-in");
+    }
+
+    const queryClient = getQueryClient();
+    void queryClient.prefetchQuery(
+      trpc.recipes.getMany.queryOptions({ ...filters })
+    );
+
+    return (
+      // ...
+    );
+  }
+
+  ```
+
+## Client side
+
+- For client components define search params using a hook in a use-feature-filters.ts file in the related module e.g. `@/modules/recipes/use-recipes-filters.ts`:
+
+  ```typescript
+  import { parseAsString, parseAsInteger, useQueryStates } from "nuqs";
+
+  import { DEFAULT_PAGE } from "@/constants";
+
+  export function useAgentsFilters() {
+    return useQueryStates({
+      search: parseAsString.withDefault("").withOptions({
+        clearOnDefault: true,
+      }),
+      page: parseAsInteger.withDefault(DEFAULT_PAGE).withOptions({
+        clearOnDefault: true,
+      }),
+    });
+  }
+
+  ```
+
+- Then to use the nuqs params hook client side:
+  ```typescript
+  import { Input } from "@/components/ui/input";
+  import { useRecipesFilters } from "../hooks/use-recipes-filters";
+  import { SearchIcon } from "lucide-react";
+
+  export function RecipesSearchFilter() {
+    const [filters, setFilters] = useRecipesFilters();
+
+    return (
+      <div className="relative">
+        <Input
+          placeholder="Search for a recipe"
+          className="h-9 bg-white w-[200px] pl-7"
+          value={filters.search}
+          onChange={(e) => setFilters({ search: e.target.value })}
+        />
+        <SearchIcon className="size-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  ```

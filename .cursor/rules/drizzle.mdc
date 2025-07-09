@@ -1,0 +1,21 @@
+---
+description: How to use Drizzle
+globs: 
+alwaysApply: false
+---
+# Drizzle Usage
+
+We use PostgreSQL.
+
+This is how we import drizzle in the project:
+
+```typescript
+import { db } from "@/lib/db";
+```
+
+The database table schemas are located in the folder at: `@/lib/db/schema.ts`.
+
+Always fetch data using the select method:
+```typescript
+const result = await db.select().from(user);
+```

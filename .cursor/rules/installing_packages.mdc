@@ -1,0 +1,24 @@
+---
+description: How to install packages
+globs: 
+alwaysApply: false
+---
+# Installing packages
+
+- Use `pnpm` to install packages.
+
+```sh
+pnpm add ...
+```
+
+## Install new Shadcn components
+
+```sh
+pnpm dlx shadcn@latest add COMPONENT
+```
+
+Example:
+
+```sh
+pnpm dlx shadcn@latest add progress
+```
