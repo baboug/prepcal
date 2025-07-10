@@ -17,6 +17,9 @@
       "suspicious": {
         "noArrayIndexKey": "off",
         "noConsole": "off"
+      },
+      "complexity": {
+        "noVoid": "off"
       }
     }
   },

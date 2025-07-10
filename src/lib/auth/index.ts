@@ -51,6 +51,14 @@ export const auth = betterAuth({
       });
     },
   },
+  user: {
+    additionalFields: {
+      onboardingComplete: {
+        type: "boolean",
+        required: false,
+      },
+    },
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;

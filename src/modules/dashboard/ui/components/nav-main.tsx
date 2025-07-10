@@ -54,7 +54,7 @@ const items = [
   },
   {
     title: "Preferences",
-    url: "#",
+    url: "/preferences",
     icon: IconAdjustmentsFilled,
   },
 ];
@@ -62,7 +62,7 @@ const items = [
 export function NavMain() {
   const pathname = usePathname();
   const isActive = (path: string) => {
-    return pathname.startsWith(path);
+    return pathname === path || (path !== "/" && pathname.startsWith(`${path}/`));
   };
 
   return (

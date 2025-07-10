@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, pgEnum, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -8,6 +8,7 @@ export const user = pgTable("user", {
     .$defaultFn(() => false)
     .notNull(),
   image: text("image"),
+  onboardingComplete: boolean().notNull().default(false),
   createdAt: timestamp("created_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
@@ -55,3 +56,62 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("created_at").$defaultFn(() => /* @__PURE__ */ new Date()),
   updatedAt: timestamp("updated_at").$defaultFn(() => /* @__PURE__ */ new Date()),
 });
+
+export const dietTypeEnum = pgEnum("diet_type", ["standard", "leangains", "keto"]);
+export const genderEnum = pgEnum("gender", ["male", "female"]);
+export const heightUnitEnum = pgEnum("height_unit", ["cm", "ft"]);
+export const weightUnitEnum = pgEnum("weight_unit", ["kg", "lbs"]);
+export const activityLevelEnum = pgEnum("activity_level", [
+  "sedentary",
+  "lightlyActive",
+  "moderatelyActive",
+  "veryActive",
+  "extremelyActive",
+]);
+export const goalEnum = pgEnum("goal", [
+  "loseWeight",
+  "loseWeightSlowly",
+  "maintain",
+  "gainWeightSlowly",
+  "gainWeight",
+]);
+export const proteinAmountEnum = pgEnum("protein_amount", ["0.82", "1.0", "1.5", "custom"]);
+export const muscleMassEnum = pgEnum("muscle_mass", ["standard", "muscular", "veryMuscular"]);
+
+export const userProfile = pgTable("user_profile", {
+  userId: text()
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  dietType: dietTypeEnum().notNull(),
+  gender: genderEnum().notNull(),
+  birthMonth: integer().notNull(),
+  birthDay: integer().notNull(),
+  birthYear: integer().notNull(),
+  heightUnit: heightUnitEnum().notNull(),
+  heightValue: real(),
+  heightFeet: integer(),
+  heightInches: integer(),
+  weightUnit: weightUnitEnum().notNull(),
+  weightValue: real().notNull(),
+  activityLevel: activityLevelEnum().notNull(),
+  goal: goalEnum().notNull(),
+  customCalorieDeficit: real(),
+  proteinAmount: proteinAmountEnum().notNull(),
+  customProteinAmount: real(),
+  fatCarbSplit: real().notNull().default(30),
+  bodyFat: real(),
+  muscleMass: muscleMassEnum(),
+  dailySteps: integer(),
+  maxCarbs: real(),
+  bmr: real(),
+  tdee: real(),
+  calories: integer(),
+  protein: integer(),
+  carbs: integer(),
+  fat: integer(),
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp().notNull().defaultNow(),
+});
+
+export type UserProfile = typeof userProfile.$inferSelect;
+export type InsertUserProfile = typeof userProfile.$inferInsert;

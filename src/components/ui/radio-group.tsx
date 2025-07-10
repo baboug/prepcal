@@ -1,33 +1,69 @@
 "use client";
 
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { CircleIcon } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-function RadioGroup({ className, ...props }: React.ComponentProps<typeof RadioGroupPrimitive.Root>) {
-  return <RadioGroupPrimitive.Root className={cn("grid gap-3", className)} data-slot="radio-group" {...props} />;
-}
+const RadioGroup = React.forwardRef<
+  React.ElementRef<typeof RadioGroupPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
+>(({ className, ...props }, ref) => {
+  return <RadioGroupPrimitive.Root className={cn("grid gap-3", className)} {...props} ref={ref} />;
+});
+RadioGroup.displayName = RadioGroupPrimitive.Root.displayName;
 
-function RadioGroupItem({ className, ...props }: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+const RadioGroupItem = React.forwardRef<
+  React.ElementRef<typeof RadioGroupPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
+>(({ className, ...props }, ref) => {
   return (
     <RadioGroupPrimitive.Item
       className={cn(
-        "aspect-square size-4 shrink-0 rounded-full border border-input text-primary shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:aria-invalid:ring-destructive/40",
+        "aspect-square size-4 rounded-full border border-input shadow-black/5 shadow-sm outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring/70 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         className
       )}
-      data-slot="radio-group-item"
+      ref={ref}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator
-        className="relative flex items-center justify-center"
-        data-slot="radio-group-indicator"
-      >
-        <CircleIcon className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 size-2 fill-primary" />
+      <RadioGroupPrimitive.Indicator className="flex items-center justify-center text-current">
+        <svg fill="currentcolor" height="6" viewBox="0 0 6 6" width="6" xmlns="http://www.w3.org/2000/svg">
+          <title>Radio</title>
+          <circle cx="3" cy="3" r="3" />
+        </svg>
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   );
-}
+});
+RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName;
 
-export { RadioGroup, RadioGroupItem };
+const RadioGroupCard = React.forwardRef<
+  React.ElementRef<typeof RadioGroupPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item> & {
+    label: string;
+    subLabel?: React.ReactNode;
+    description?: string;
+    icon?: React.ReactNode;
+  }
+>(({ className, label, subLabel, description, icon, ...props }, ref) => {
+  return (
+    <div className="relative flex w-full items-start gap-2 rounded-lg border border-input p-4 shadow-black/5 shadow-sm has-[[data-state=checked]]:border-ring">
+      <RadioGroupItem className={cn("order-1 after:absolute after:inset-0", className)} ref={ref} {...props} />
+      <div className="flex grow items-center gap-3">
+        {icon}
+        <div className={cn("grid grow", description && "gap-2")}>
+          <Label className="text-sm" htmlFor={`${props.id}`}>
+            {label} <span className="font-normal text-muted-foreground text-xs leading-[inherit]">{subLabel}</span>
+          </Label>
+          <p className="text-muted-foreground text-xs" id={`${props.id}-description`}>
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+});
+RadioGroupCard.displayName = RadioGroupPrimitive.Item.displayName;
+
+export { RadioGroup, RadioGroupItem, RadioGroupCard };

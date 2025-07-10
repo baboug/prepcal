@@ -20,6 +20,14 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-calories: var(--calories);
+  --color-calories-foreground: var(--calories-foreground);
+  --color-protein: var(--protein);
+  --color-protein-foreground: var(--protein-foreground);
+  --color-carbs: var(--carbs);
+  --color-carbs-foreground: var(--carbs-foreground);
+  --color-fat: var(--fat);
+  --color-fat-foreground: var(--fat-foreground);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -97,6 +105,14 @@
   --chart-3: oklch(0.6461 0.1943 41.1158);
   --chart-4: oklch(0.432 0.2106 292.7591);
   --chart-5: oklch(0.3796 0.1783 293.7446);
+  --calories: oklch(0.77 0.16 70);
+  --calories-foreground: oklch(0.56 0.15 49);
+  --protein: oklch(0.59 0.2 277);
+  --protein-foreground: oklch(0.46 0.21 277);
+  --carbs: oklch(0.7 0.15 162);
+  --carbs-foreground: oklch(0.51 0.1 166);
+  --fat: oklch(0.67 0.26 322);
+  --fat-foreground: oklch(0.52 0.23 324);
   --sidebar: oklch(0.9851 0 0);
   --sidebar-foreground: oklch(0.3588 0.1354 278.6973);
   --sidebar-primary: oklch(0.7049 0.1867 47.6044);
@@ -164,6 +180,14 @@
   --chart-3: oklch(0.6461 0.1943 41.1158);
   --chart-4: oklch(0.4907 0.2412 292.5809);
   --chart-5: oklch(0.432 0.2106 292.7591);
+  --calories: oklch(0.77 0.16 70);
+  --calories-foreground: oklch(0.96 0.06 96);
+  --protein: oklch(0.59 0.2 277);
+  --protein-foreground: oklch(0.93 0.03 273);
+  --carbs: oklch(0.7 0.15 162);
+  --carbs-foreground: oklch(0.95 0.05 163);
+  --fat: oklch(0.67 0.26 322);
+  --fat-foreground: oklch(0.95 0.04 319);
   --sidebar: oklch(0.1356 0.0164 269.3958);
   --sidebar-foreground: oklch(0.9299 0.0334 272.7879);
   --sidebar-primary: oklch(0.6461 0.1943 41.1158);
@@ -221,4 +245,16 @@
   [data-slot="button"] {
     cursor: pointer;
   }
+}
+
+/* Hide number input arrows */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }

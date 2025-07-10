@@ -1,6 +1,6 @@
 "use client";
 
-import { authClient } from "@/lib/auth/auth-client";
+import type { Session } from "@/lib/auth";
 import { getUserFirstName } from "@/lib/utils";
 import { ChartAreaInteractive } from "@/modules/dashboard/ui/components/chart-area-interactive";
 import { DataTable } from "@/modules/dashboard/ui/components/data-table";
@@ -8,13 +8,11 @@ import { SectionCards } from "@/modules/dashboard/ui/components/section-cards";
 import { SiteHeader } from "@/modules/dashboard/ui/components/site-header";
 import data from "@/modules/dashboard/utils/data.json" with { type: "json" };
 
-export function DashboardView() {
-  const { data: session } = authClient.useSession();
+interface DashboardViewProps {
+  session: Session;
+}
 
-  if (!session) {
-    return null;
-  }
-
+export function DashboardView({ session }: DashboardViewProps) {
   return (
     <main>
       <SiteHeader title={`👋 Welcome back, ${getUserFirstName(session.user)}`} />

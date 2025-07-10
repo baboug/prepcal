@@ -13,5 +13,9 @@ export default async function DashboardPage() {
     redirect("/auth/sign-in");
   }
 
-  return <DashboardView />;
+  if (!session.user.onboardingComplete) {
+    return redirect("/onboarding");
+  }
+
+  return <DashboardView session={session} />;
 }
