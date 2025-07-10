@@ -28,7 +28,7 @@ const RadioGroupItem = React.forwardRef<
       {...props}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center text-current">
-        <svg fill="currentcolor" height="6" viewBox="0 0 6 6" width="6" xmlns="http://www.w3.org/2000/svg">
+        <svg fill="currentColor" height="6" viewBox="0 0 6 6" width="6" xmlns="http://www.w3.org/2000/svg">
           <title>Radio</title>
           <circle cx="3" cy="3" r="3" />
         </svg>

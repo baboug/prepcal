@@ -6,28 +6,59 @@ import { useFormContext } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CM_TO_IN, KG_TO_LBS } from "@/modules/profile/utils/constants";
 
 export function PhysicalStats() {
   const form = useFormContext();
 
   const handleHeightUnitChange = (unit: "cm" | "ft") => {
+    const currentHeight = form.getValues("height");
+    let newValue: number | { feet: number; inches: number };
+
     if (unit === "cm") {
+      if (currentHeight?.unit === "ft" && typeof currentHeight.value === "object") {
+        // Convert ft/inches to cm
+        const totalInches = (currentHeight.value.feet || 0) * 12 + (currentHeight.value.inches || 0);
+        newValue = Math.round(totalInches * CM_TO_IN);
+      } else {
+        newValue = 180; // default
+      }
       form.setValue("height", {
         unit: "cm",
-        value: 180,
+        value: newValue,
       });
     } else {
+      if (currentHeight?.unit === "cm" && typeof currentHeight.value === "number") {
+        // Convert cm to ft/inches
+        const totalInches = Math.round(currentHeight.value / CM_TO_IN);
+        const feet = Math.floor(totalInches / 12);
+        const inches = totalInches % 12;
+        newValue = { feet, inches };
+      } else {
+        newValue = { feet: 5, inches: 11 }; // default
+      }
       form.setValue("height", {
         unit: "ft",
-        value: { feet: 5, inches: 11 },
+        value: newValue,
       });
     }
   };
 
   const handleWeightUnitChange = (unit: "kg" | "lbs") => {
+    const currentWeight = form.getValues("weight");
+    let newWeightValue: number;
+
+    if (unit === "lbs" && currentWeight?.unit === "kg" && typeof currentWeight.value === "number") {
+      newWeightValue = Math.round(currentWeight.value * KG_TO_LBS);
+    } else if (unit === "kg" && currentWeight?.unit === "lbs" && typeof currentWeight.value === "number") {
+      newWeightValue = Math.round(currentWeight.value / KG_TO_LBS);
+    } else {
+      newWeightValue = unit === "kg" ? 70 : 150; // default
+    }
+
     form.setValue("weight", {
       unit,
-      value: unit === "kg" ? 70 : 150,
+      value: newWeightValue,
     });
   };
 
@@ -160,7 +191,7 @@ export function PhysicalStats() {
           <div className="max-w-xs">
             <FormField
               control={form.control}
-              name="weight.value"
+              name="weight"
               render={({ field }) => (
                 <FormItem>
                   <div className="relative">
@@ -170,7 +201,13 @@ export function PhysicalStats() {
                         placeholder={field.value.unit === "kg" ? "70" : "150"}
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange({
+                            ...field.value,
+                            value: Number(e.target.value),
+                          })
+                        }
+                        value={field.value.value ?? ""}
                       />
                     </FormControl>
                     <div className="-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground">

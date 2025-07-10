@@ -6,9 +6,7 @@ export const mapProfileDataToDbSchema = (data: ProfileData, userId: string): Omi
     userId,
     dietType: data.dietType,
     gender: data.gender,
-    birthMonth: data.birthDate.month,
-    birthDay: data.birthDate.day,
-    birthYear: data.birthDate.year,
+    birthDate: data.birthDate,
     heightUnit: data.height.unit,
     heightValue: typeof data.height.value === "number" ? data.height.value : null,
     heightFeet: typeof data.height.value === "object" ? data.height.value.feet : null,
@@ -34,26 +32,29 @@ export const mapProfileDataToDbSchema = (data: ProfileData, userId: string): Omi
   };
 };
 
+const mapHeightFromDb = (profile: UserProfile) => {
+  if (profile.heightUnit === "cm") {
+    return {
+      unit: "cm" as const,
+      value: profile.heightValue ?? 0,
+    };
+  }
+  return {
+    unit: "ft" as const,
+    value: {
+      feet: profile.heightFeet ?? 0,
+      inches: profile.heightInches ?? 0,
+    },
+  };
+};
+
 export const mapProfileToResponse = (profile: UserProfile) => {
   return {
     userId: profile.userId,
     dietType: profile.dietType,
     gender: profile.gender,
-    birthDate: {
-      month: profile.birthMonth,
-      day: profile.birthDay,
-      year: profile.birthYear,
-    },
-    height: {
-      unit: profile.heightUnit,
-      value:
-        profile.heightUnit === "cm"
-          ? profile.heightValue
-          : {
-              feet: profile.heightFeet,
-              inches: profile.heightInches,
-            },
-    },
+    birthDate: new Date(profile.birthDate).toISOString(),
+    height: mapHeightFromDb(profile),
     weight: {
       unit: profile.weightUnit,
       value: profile.weightValue,

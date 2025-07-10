@@ -1,16 +1,15 @@
 "use client";
 
-import { Calendar, MarsIcon, User, VenusIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, MarsIcon, User, VenusIcon } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupCard } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MONTHS } from "@/modules/profile/utils/constants";
-
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
-const days = Array.from({ length: 31 }, (_, i) => i + 1);
+import { cn } from "@/lib/utils";
 
 export function BasicInfo() {
   const form = useFormContext();
@@ -68,85 +67,42 @@ export function BasicInfo() {
       <div className="space-y-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Calendar className="size-5 text-muted-foreground" />
+            <CalendarIcon className="size-5 text-muted-foreground" />
             <h3 className="font-semibold text-foreground text-lg">When were you born?</h3>
           </div>
           <p className="text-muted-foreground text-sm">Select the day, month, and year that you were born.</p>
         </div>
-        <div className="flex items-center gap-6">
-          <FormField
-            control={form.control}
-            name="birthDate.day"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Day</FormLabel>
-                <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+        <FormField
+          control={form.control}
+          name="birthDate"
+          render={({ field }) => (
+            <FormItem className="flex w-fit flex-col">
+              <Popover>
+                <PopoverTrigger asChild>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Day" />
-                    </SelectTrigger>
+                    <Button
+                      className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                      variant="outline"
+                    >
+                      {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                      <CalendarIcon className="ml-auto size-4 opacity-50" />
+                    </Button>
                   </FormControl>
-                  <SelectContent>
-                    {days.map((day) => (
-                      <SelectItem key={day} value={day.toString()}>
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="birthDate.month"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Month</FormLabel>
-                <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Month" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {MONTHS.map((month) => (
-                      <SelectItem key={month.value} value={month.value.toString()}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="birthDate.year"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Year</FormLabel>
-                <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-auto p-0">
+                  <Calendar
+                    captionLayout="dropdown"
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                    mode="single"
+                    onSelect={(date) => field.onChange(date?.toISOString())}
+                    selected={field.value}
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

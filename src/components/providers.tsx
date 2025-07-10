@@ -12,7 +12,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" disableTransitionOnChange enableSystem>
       <TRPCReactProvider>
         <AuthProvider>{children}</AuthProvider>
-        <ReactQueryDevtools />
+        {process.env.NODE_ENV === "development" && <ReactQueryDevtools />}
         <Toaster richColors />
       </TRPCReactProvider>
     </ThemeProvider>

@@ -36,7 +36,7 @@ export function CalorieComparisonChart({ bmr, tdee, calories, goal }: CalorieCom
   const calorieChartConfig = {
     bmr: {
       label: "BMR",
-      color: "hsl(var(--chart-3))",
+      color: "hsl(var(--chart-4))",
     },
     tdee: {
       label: "TDEE",

@@ -227,3 +227,12 @@ export const ONBOARDING_STEPS = [
   { id: OnboardingStep.ADVANCED, title: "Advanced", description: "Fine-tune your plan" },
   { id: OnboardingStep.RESULTS, title: "Results", description: "Your personalized plan" },
 ];
+
+export const LBS_TO_KG = 0.453_592;
+export const KG_TO_LBS = 2.204_62;
+export const CM_TO_IN = 2.54;
+export const FT_TO_CM = 30.48;
+
+export const FAT_CALORIES_PER_GRAM = 9;
+export const CARB_CALORIES_PER_GRAM = 4;
+export const PROTEIN_CALORIES_PER_GRAM = 4;

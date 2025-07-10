@@ -6,8 +6,6 @@ import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { useTRPC } from "@/lib/trpc/client";
 import { SiteHeader } from "@/modules/dashboard/ui/components/site-header";
-import type { ProfileData } from "@/modules/profile/types";
-
 import { ProfileForm } from "../components/profile-form";
 
 export function ProfileView() {
@@ -18,7 +16,7 @@ export function ProfileView() {
     <>
       <SiteHeader title="Profile" />
       <div className="p-4 lg:p-6">
-        <ProfileForm profile={data as ProfileData} />
+        <ProfileForm profile={data} />
       </div>
     </>
   );

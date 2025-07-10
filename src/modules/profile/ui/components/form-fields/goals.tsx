@@ -30,7 +30,7 @@ export function Goals() {
                       description={goal.description}
                       icon={
                         <div className={cn("rounded-lg p-1 md:p-2", goal.bgColor, goal.iconColor)}>
-                          <Icon className="size-4 md:size-5" />
+                          {Icon && <Icon className="size-4 md:size-5" />}
                         </div>
                       }
                       id={goal.value}

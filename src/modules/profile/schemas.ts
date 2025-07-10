@@ -3,11 +3,7 @@ import { z } from "zod";
 export const profileSchema = z.object({
   dietType: z.enum(["standard", "leangains", "keto"]),
   gender: z.enum(["male", "female"]),
-  birthDate: z.object({
-    month: z.number().min(1).max(12),
-    day: z.number().min(1).max(31),
-    year: z.number().min(1900).max(new Date().getFullYear()),
-  }),
+  birthDate: z.string().datetime(),
   height: z.object({
     unit: z.enum(["cm", "ft"]),
     value: z.union([

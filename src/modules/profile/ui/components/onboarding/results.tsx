@@ -52,7 +52,7 @@ export function Results() {
           Complete Setup
         </Button>
       </div>
-      <div className="rounded-lg border border-muted bg-muted p-4 text-center">
+      <div className="rounded-lg border border-muted bg-muted p-4 text-center dark:border-0">
         <p className="text-muted-foreground text-sm">
           <strong>Disclaimer:</strong> This is an estimate based on established formulas. Individual results may vary.
           Consult a healthcare provider before making significant dietary changes.

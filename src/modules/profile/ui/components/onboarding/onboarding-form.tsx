@@ -40,6 +40,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
     trpc.profile.create.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.profile.get.queryOptions());
+        setCurrentStep(currentStep + 1);
         window.scrollTo({ top: 0, behavior: "instant" });
         setShowConfetti(true);
       },
@@ -59,11 +60,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
       proteinAmount: "1.0" as const,
       fatCarbSplit: 30,
       muscleMass: "standard" as const,
-      birthDate: {
-        month: 1,
-        day: 1,
-        year: 1990,
-      },
+      birthDate: new Date("1990-01-01").toISOString(),
       height: {
         unit: "cm" as const,
         value: 180,
@@ -82,24 +79,28 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const mapFormDataToProfileData = (): ProfileData => {
+    return {
+      ...formData,
+      fatCarbSplit: formData.fatCarbSplit ?? 30,
+      bmr,
+      tdee,
+      calories,
+      protein,
+      carbs,
+      fat,
+    } as ProfileData;
+  };
+
   const handleNextStep = () => {
-    if (currentStep < ONBOARDING_STEPS.length) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep === ONBOARDING_STEPS.length - 1) {
+      const dataWithNutrition = mapFormDataToProfileData();
+      createProfile.mutate(dataWithNutrition);
+      return;
     }
 
-    if (currentStep === ONBOARDING_STEPS.length - 1) {
-      const currentFormData = form.watch();
-      const dataWithNutrition = {
-        ...currentFormData,
-        fatCarbSplit: currentFormData.fatCarbSplit ?? 30,
-        bmr,
-        tdee,
-        calories,
-        protein,
-        carbs,
-        fat,
-      } as ProfileData;
-      createProfile.mutate(dataWithNutrition);
+    if (currentStep < ONBOARDING_STEPS.length) {
+      setCurrentStep(currentStep + 1);
     }
   };
 

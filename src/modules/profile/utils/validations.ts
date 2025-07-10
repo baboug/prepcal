@@ -6,7 +6,7 @@ export const canGoToNextStep = (data: ProfileData, currentStep: OnboardingStep) 
     case OnboardingStep.DIET_TYPE:
       return !!dietType;
     case OnboardingStep.BASIC_INFO:
-      return !!gender && !!birthDate?.month && !!birthDate?.day && !!birthDate?.year;
+      return !!gender && !!birthDate;
     case OnboardingStep.PHYSICAL_STATS:
       return !!height?.unit && !!height?.value && !!weight?.unit && !!weight?.value;
     case OnboardingStep.ACTIVITY_LEVEL:

@@ -46,17 +46,15 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   });
 
   const formData = form.watch() as ProfileData;
+  const nutritionValues = calculateNutritionProfile(formData);
 
   const onSubmit = (data: ProfileData) => {
-    const nutritionValues = calculateNutritionProfile(data);
     const dataWithNutrition = {
       ...data,
       ...nutritionValues,
     };
     updateProfile.mutate(dataWithNutrition);
   };
-
-  const { calories, protein, carbs, fat } = calculateNutritionProfile(formData);
 
   return (
     <div className="relative grid gap-8 xl:grid-cols-[1fr_400px]">
@@ -75,10 +73,20 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       </Form>
       <div className="hidden xl:block">
         <div className="sticky top-8">
-          <NutritionTargetsCard calories={calories} carbs={carbs} fat={fat} protein={protein} />
+          <NutritionTargetsCard
+            calories={nutritionValues.calories}
+            carbs={nutritionValues.carbs}
+            fat={nutritionValues.fat}
+            protein={nutritionValues.protein}
+          />
         </div>
       </div>
-      <StickyNutritionBar calories={calories} carbs={carbs} fat={fat} protein={protein} />
+      <StickyNutritionBar
+        calories={nutritionValues.calories}
+        carbs={nutritionValues.carbs}
+        fat={nutritionValues.fat}
+        protein={nutritionValues.protein}
+      />
     </div>
   );
 }
