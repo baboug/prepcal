@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { AuthView } from "@/modules/auth/views/auth-view";
+import { AuthView } from "@/modules/auth/ui/views/auth-view";
 
 export function generateStaticParams() {
   return Object.values(authViewPaths).map((pathname) => ({ pathname }));

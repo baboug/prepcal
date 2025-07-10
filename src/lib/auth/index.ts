@@ -5,8 +5,8 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { env } from "@/lib/env";
 import { resend } from "@/lib/resend";
-import EmailVerification from "@/modules/emails/templates/email-verification";
-import PasswordReset from "@/modules/emails/templates/password-reset";
+import EmailVerification from "@/modules/emails/ui/templates/email-verification";
+import PasswordReset from "@/modules/emails/ui/templates/password-reset";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
