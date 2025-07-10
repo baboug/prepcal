@@ -10,7 +10,7 @@ alwaysApply: false
 ## Data Fetching
 
 ### Server Side
-- Server components should use the tRPC client and getQueryClient located at `@/lib/trpc/server` to prefetch the data.
+- Server components should use the tRPC client and getQueryClient located at [server.tsx](mdc:src/lib/trpc/server.tsx) to prefetch the data.
 - Server side data prefetching:
 
   ```typescript
@@ -34,8 +34,12 @@ alwaysApply: false
     });
 
     if (!session) {
-      redirect("/sign-in");
+      redirect("/auth/sign-in");
     }
+
+      if (!session.user.onboardingComplete) {
+        return redirect("/onboarding");
+      }
 
     const queryClient = getQueryClient();
     void queryClient.prefetchQuery(
@@ -43,21 +47,19 @@ alwaysApply: false
     );
 
     return (
-      <>
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <Suspense fallback={<MealPlansViewSkeleton />}>
-            <ErrorBoundary fallback={<MealPlansViewError />}>
-              <MealPlansView />
-            </ErrorBoundary>
-          </Suspense>
-        </HydrationBoundary>
-      </>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <Suspense fallback={<MealPlansViewSkeleton />}>
+          <ErrorBoundary fallback={<MealPlansViewError />}>
+            <MealPlansView />
+          </ErrorBoundary>
+        </Suspense>
+      </HydrationBoundary>
     );
   }
   ```
 
 ### Client Side
-- Client components should use the useTRPC hook located at `@/lib/trpc/client` for data fetching.
+- Client components should use the useTRPC hook located at [client.tsx](mdc:src/lib/trpc/client.tsx) for data fetching.
 - Client side data fetching:
 
   ```typescript
@@ -112,7 +114,7 @@ alwaysApply: false
   ```
 
 ## Data Mutation
-- Use the useTRPC hook located at `@/lib/trpc/client` for data mutation:
+- Use the useTRPC hook located at [client.tsx](mdc:src/lib/trpc/client.tsx) for data mutation:
 
   ```typescript
   "use client";
@@ -250,7 +252,7 @@ alwaysApply: false
   ```
 
 ## Procedures
-- Use the public, protected, or premium procedures located at `@/lib/trpc/init` for authorization
+- Use the public, protected, or premium procedures located at [init.ts](mdc:src/lib/trpc/init.ts) for authorization
 
 ### Format
 - Create tRPC procedures in the following format:
