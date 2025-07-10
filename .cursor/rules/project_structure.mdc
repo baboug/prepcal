@@ -31,8 +31,8 @@ src/
 
 ## Modules
 - Colocate all files related to a feature in it's modules folder in the following structure:
-- **server/**: Server related code is in the server folder e.g. `src/modules/meal-plans/server/`. The server code is organized using a layered architecture: procedures -> service -> repository.
-- **server/feature-procedures.ts**: tRPC procedures for the feature are kept in e.g. `src/modules/meal-plans/server/meal-plans-procedures.ts`. The procedures act as simple routers and validate inputs, delegate logic to service functions, and then return results or throw errors.
+- **server/**: Server related code is in the server folder e.g. `src/modules/meal-plans/server/`. The server code is organized using a layered architecture: router -> service -> repository.
+- **server/feature-router.ts**: tRPC procedures for the feature are kept in e.g. `src/modules/meal-plans/server/meal-plans-router.ts`. The router functions validate inputs, delegate logic to service functions, and then return results or throw errors.
 - **server/feature-service.ts**: The feature service e.g. `src/modules/meal-plans/server/meal-plans-service.ts` exports functions reponsible for logic related to the feature. The service interacts with the database through the repository or external services such as background jobs or email.
 - **server/feature-repository.ts**: The feature repository e.g. `src/modules/meal-plans/server/meal-plans-repository.ts` exports functions reponsible for interacting with the database using Drizzle ORM.
 - **ui/**: UI related code is in the ui folder e.g. `src/modules/meal-plans/ui/` with folders for components, hooks, views and layouts.

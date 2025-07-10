@@ -53,8 +53,12 @@ alwaysApply: false
     });
 
     if (!session) {
-      redirect("/sign-in");
+      redirect("/auth/sign-in");
     }
+
+      if (!session.user.onboardingComplete) {
+        return redirect("/onboarding");
+      }
 
     const queryClient = getQueryClient();
     void queryClient.prefetchQuery(

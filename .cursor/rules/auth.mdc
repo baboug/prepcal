@@ -6,11 +6,10 @@ alwaysApply: false
 # Auth
 
 - Use better-auth for authentication
-- The auth-client is used to perform actions such as client side authorization,sign in, or sign out. The auth-client is located at `@/lib/auth-client`.
-- To perform actions such as sign in or sign out use the authClient.
 
 ## Authorization
 
+- The auth-client is used to perform actions such as client side authorization, sign in, or sign out. The auth-client is located at [auth-client.ts](mdc:src/lib/auth/auth-client.ts).
 - Client side authorization:
 
   ```typescript
@@ -25,6 +24,7 @@ alwaysApply: false
   }
   ```
 
+- The better-auth instance is used for server side authorization. The better-auth instance is located at [index.ts](mdc:src/lib/auth/index.ts).
 - Server side authorization:
 
   ```typescript
@@ -39,8 +39,12 @@ alwaysApply: false
     });
 
     if (!session) {
-      redirect("/sign-in");
+      redirect("/auth/sign-in");
     }
+
+      if (!session.user.onboardingComplete) {
+        return redirect("/onboarding");
+      }
 
     return (
         //...

@@ -13,7 +13,7 @@ This is how we import drizzle in the project:
 import { db } from "@/lib/db";
 ```
 
-The database table schemas are located in the folder at: `@/lib/db/schema.ts`.
+The database table schemas are located in the folder at: [schema.ts](mdc:src/lib/db/schema.ts).
 
 Always fetch data using the select method:
 ```typescript

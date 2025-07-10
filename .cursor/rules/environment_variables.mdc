@@ -12,7 +12,7 @@ This is how we add environment variables to the project:
       NEW_VARIABLE=value_example
       ```
 
-  2. Add to `@/lib/env.ts`:
+  2. Add to [env.ts](mdc:src/lib/env.ts):
       ```typescript
       // For server-only variables
       server: {
