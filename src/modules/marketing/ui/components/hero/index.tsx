@@ -31,7 +31,7 @@ export function Hero() {
       <div className="flex flex-col gap-4 lg:flex-row">
         <motion.div className="flex-1" variants={item}>
           <TitleSection />
-          <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="grid gap-4 lg:grid-cols-3">
             <motion.div className="flex-1" variants={item}>
               <FeaturesCard />
             </motion.div>
