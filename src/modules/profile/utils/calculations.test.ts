@@ -147,7 +147,7 @@ describe("calculateCalories", () => {
   it("returns rounded calories", () => {
     const profile = createTestProfile();
     const calories = calculateCalories(profile);
-    expect(calories).toBe(Math.round(calories));
+    expect(Number.isInteger(calories)).toBe(true);
   });
 });
 
@@ -301,9 +301,8 @@ describe("calculateMacros", () => {
     const calories = calculateCalories(profile);
 
     const totalCalories = macros.protein * 4 + macros.fat * 9 + macros.carbs * 4;
-
-    // Allow 5% variance due to rounding
-    expect(totalCalories).toBeCloseTo(calories, -calories * 0.05);
+    const tolerance = calories * 0.05;
+    expect(Math.abs(totalCalories - calories)).toBeLessThanOrEqual(tolerance);
   });
 });
 
@@ -415,13 +414,15 @@ describe("calculateAge", () => {
   it("handles birthday not yet passed this year", () => {
     const today = new Date();
     const currentYear = today.getFullYear();
-    const futureMonth = today.getMonth() + 2; // Future month this year
+    const currentMonth = today.getMonth() + 1; // Convert to 1-based month
+    const futureMonth = currentMonth < 12 ? currentMonth + 1 : 1;
 
+    const birthYear = futureMonth === 1 ? currentYear - 24 : currentYear - 25;
     const profile = createTestProfile({
-      birthDate: `${currentYear - 25}-${futureMonth > 12 ? 1 : futureMonth}-01`,
+      birthDate: `${birthYear}-${futureMonth.toString().padStart(2, "0")}-01`,
     });
     const age = calculateAge(profile);
-    expect(age).toBe(futureMonth > 12 ? 25 : 24); // Should be 24 if birthday hasn't passed
+    expect(age).toBe(futureMonth === 1 ? 24 : 24); // Should be 24 if birthday hasn't passed
   });
 
   it("handles very old ages", () => {
