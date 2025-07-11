@@ -1,15 +1,6 @@
+import { CARB_CALORIES_PER_GRAM, FAT_CALORIES_PER_GRAM, PROTEIN_CALORIES_PER_GRAM } from "@/lib/constants";
 import type { ProfileData } from "../types";
-import {
-  ACTIVITY_MULTIPLIERS,
-  CARB_CALORIES_PER_GRAM,
-  CM_TO_IN,
-  FAT_CALORIES_PER_GRAM,
-  FT_TO_CM,
-  GOAL_ADJUSTMENTS,
-  KG_TO_LBS,
-  LBS_TO_KG,
-  PROTEIN_CALORIES_PER_GRAM,
-} from "./constants";
+import { ACTIVITY_MULTIPLIERS, CM_TO_IN, FT_TO_CM, GOAL_ADJUSTMENTS, KG_TO_LBS, LBS_TO_KG } from "./constants";
 
 export function calculateNutritionProfile(data: ProfileData) {
   const calories = calculateCalories(data);

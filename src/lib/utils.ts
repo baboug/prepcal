@@ -10,3 +10,10 @@ export function cn(...inputs: ClassValue[]) {
 export function getUserFirstName(user: Session["user"]) {
   return user.name?.split(" ")[0] || "";
 }
+
+export function capitalizeWords(text: string): string {
+  return text
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

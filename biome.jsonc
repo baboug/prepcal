@@ -19,7 +19,8 @@
         "noConsole": "off"
       },
       "complexity": {
-        "noVoid": "off"
+        "noVoid": "off",
+        "noExcessiveCognitiveComplexity": "off"
       }
     }
   },

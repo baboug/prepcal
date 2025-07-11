@@ -1,4 +1,5 @@
-import { boolean, integer, pgEnum, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, real, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -113,3 +114,71 @@ export const userProfile = pgTable("user_profile", {
 
 export type UserProfile = typeof userProfile.$inferSelect;
 export type InsertUserProfile = typeof userProfile.$inferInsert;
+
+export const recipe = pgTable(
+  "recipe",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }), // Optional if it's a public recipe
+    name: text("name").notNull(),
+    description: text("description"),
+    category: text("category").array(),
+    cuisine: text("cuisine").array(),
+    keywords: text("keywords").array(),
+    ingredients: jsonb("ingredients")
+      .$type<
+        {
+          name: string;
+          amount?: number;
+          unit?: string;
+          notes?: string;
+        }[]
+      >()
+      .notNull(),
+    instructions: jsonb("instructions")
+      .$type<
+        {
+          step: string;
+          video?: {
+            url: string;
+            duration: string;
+            thumbnailUrl: string;
+          };
+        }[]
+      >()
+      .notNull(),
+    prepTime: integer("prep_time"),
+    cookTime: integer("cook_time"),
+    calories: integer("calories"),
+    macros: jsonb("macros").$type<{
+      protein: number;
+      carbs: number;
+      fat: number;
+    }>(),
+    servings: integer("servings"),
+    imageUrl: text("image_url"),
+    sourceUrl: text("source_url"),
+    videoUrl: text("video_url"),
+    isPublic: boolean("is_public").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("recipe_user_id_idx").on(table.userId),
+    nameIdx: index("recipe_name_idx").on(table.name),
+    isPublicIdx: index("recipe_is_public_idx").on(table.isPublic),
+    categoryIdx: index("recipe_category_idx").on(table.category),
+    cuisineIdx: index("recipe_cuisine_idx").on(table.cuisine),
+    keywordsIdx: index("recipe_keywords_idx").on(table.keywords),
+  })
+);
+
+export const recipeRelations = relations(recipe, ({ one }) => ({
+  user: one(user, {
+    fields: [recipe.userId],
+    references: [user.id],
+    relationName: "userRecipes",
+  }),
+}));
+
+export type Recipe = typeof recipe.$inferSelect;

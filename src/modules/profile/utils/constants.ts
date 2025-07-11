@@ -232,7 +232,3 @@ export const LBS_TO_KG = 0.453_592;
 export const KG_TO_LBS = 2.204_62;
 export const CM_TO_IN = 2.54;
 export const FT_TO_CM = 30.48;
-
-export const FAT_CALORIES_PER_GRAM = 9;
-export const CARB_CALORIES_PER_GRAM = 4;
-export const PROTEIN_CALORIES_PER_GRAM = 4;

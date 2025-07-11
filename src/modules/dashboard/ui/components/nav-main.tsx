@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  IconAdjustmentsFilled,
-  IconAppsFilled,
-  IconBarbellFilled,
-  IconBowlSpoonFilled,
-  IconChartDotsFilled,
-  IconChefHatFilled,
-  IconDashboardFilled,
-} from "@tabler/icons-react";
+import { IconAppsFilled, IconBarbellFilled, IconBowlSpoonFilled, IconDashboardFilled } from "@tabler/icons-react";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,29 +25,14 @@ const items = [
     icon: IconAppsFilled,
   },
   {
-    title: "Progress",
-    url: "/progress",
-    icon: IconChartDotsFilled,
-  },
-  {
     title: "Recipes",
     url: "/recipes",
     icon: IconBowlSpoonFilled,
   },
   {
-    title: "Meal Prep",
-    url: "/meal-prep",
-    icon: IconChefHatFilled,
-  },
-  {
     title: "Profile",
     url: "/profile",
     icon: IconBarbellFilled,
-  },
-  {
-    title: "Preferences",
-    url: "/preferences",
-    icon: IconAdjustmentsFilled,
   },
 ];
 
