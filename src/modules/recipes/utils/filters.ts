@@ -1,48 +1,70 @@
-import { ilike, lte, or, type SQL } from "drizzle-orm";
+import { arrayContains, gte, ilike, lte, type SQL, sql } from "drizzle-orm";
 
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { recipe } from "@/lib/db/schema";
 import type { RecipeFilters } from "../types";
 
-function buildArrayFilterConditions(
-  values: string[] | undefined,
-  column: typeof recipe.category | typeof recipe.cuisine | typeof recipe.keywords
-): SQL | null {
-  if (!values || values.length === 0) {
-    return null;
+export function buildFilterConditions(
+  filters: RecipeFilters = {
+    page: DEFAULT_PAGE,
+    pageSize: DEFAULT_PAGE_SIZE,
+    sortBy: "default",
+    sortOrder: "desc",
   }
-
-  const conditions = values.map((value) => ilike(column, `%${value}%`));
-  return conditions.length > 0 ? or(...conditions) || null : null;
-}
-
-export function buildFilterConditions(filters: RecipeFilters = {}): SQL[] {
+): SQL[] {
   const conditions: SQL[] = [];
 
-  const categoryCondition = buildArrayFilterConditions(filters.category, recipe.category);
-  if (categoryCondition) {
-    conditions.push(categoryCondition);
+  if (filters.search) {
+    conditions.push(ilike(recipe.name, `%${filters.search}%`));
   }
 
-  const cuisineCondition = buildArrayFilterConditions(filters.cuisine, recipe.cuisine);
-  if (cuisineCondition) {
-    conditions.push(cuisineCondition);
+  if (filters.category) {
+    conditions.push(arrayContains(recipe.category, [filters.category]));
   }
 
-  const keywordCondition = buildArrayFilterConditions(filters.keywords, recipe.keywords);
-  if (keywordCondition) {
-    conditions.push(keywordCondition);
+  if (filters.cuisine) {
+    conditions.push(arrayContains(recipe.cuisine, [filters.cuisine]));
+  }
+
+  // Range filters
+  if (filters.minCalories) {
+    conditions.push(gte(recipe.calories, filters.minCalories));
   }
 
   if (filters.maxCalories) {
     conditions.push(lte(recipe.calories, filters.maxCalories));
   }
 
-  if (filters.maxPrepTime) {
-    conditions.push(lte(recipe.prepTime, filters.maxPrepTime));
+  if (filters.minProtein) {
+    conditions.push(gte(sql`CAST(${recipe.macros}->>'protein' AS NUMERIC)`, filters.minProtein));
   }
 
-  if (filters.maxCookTime) {
-    conditions.push(lte(recipe.cookTime, filters.maxCookTime));
+  if (filters.maxProtein) {
+    conditions.push(lte(sql`CAST(${recipe.macros}->>'protein' AS NUMERIC)`, filters.maxProtein));
+  }
+
+  if (filters.minCarbs) {
+    conditions.push(gte(sql`CAST(${recipe.macros}->>'carbs' AS NUMERIC)`, filters.minCarbs));
+  }
+
+  if (filters.maxCarbs) {
+    conditions.push(lte(sql`CAST(${recipe.macros}->>'carbs' AS NUMERIC)`, filters.maxCarbs));
+  }
+
+  if (filters.minFat) {
+    conditions.push(gte(sql`CAST(${recipe.macros}->>'fat' AS NUMERIC)`, filters.minFat));
+  }
+
+  if (filters.maxFat) {
+    conditions.push(lte(sql`CAST(${recipe.macros}->>'fat' AS NUMERIC)`, filters.maxFat));
+  }
+
+  if (filters.minTime) {
+    conditions.push(gte(sql`COALESCE(${recipe.prepTime}, 0) + COALESCE(${recipe.cookTime}, 0)`, filters.minTime));
+  }
+
+  if (filters.maxTime) {
+    conditions.push(lte(sql`COALESCE(${recipe.prepTime}, 0) + COALESCE(${recipe.cookTime}, 0)`, filters.maxTime));
   }
 
   return conditions;

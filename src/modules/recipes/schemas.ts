@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from "@/lib/constants";
 
 export const ingredientSchema = z.object({
   name: z.string().min(1, "Ingredient name is required"),
@@ -40,7 +41,6 @@ export const recipeSchema = z.object({
   imageUrl: z.string().url().optional(),
   sourceUrl: z.string().url().optional(),
   videoUrl: z.string().url().optional(),
-  isPublic: z.boolean().default(false),
 });
 
 export const createRecipeSchema = recipeSchema;
@@ -54,11 +54,23 @@ export const scrapeRecipeSchema = z.object({
 });
 
 export const recipeFiltersSchema = z.object({
-  category: z.array(z.string()).optional(),
-  cuisine: z.array(z.string()).optional(),
-  keywords: z.array(z.string()).optional(),
+  page: z.number().default(DEFAULT_PAGE),
+  pageSize: z.number().min(MIN_PAGE_SIZE).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  search: z.string().nullish(),
+  category: z.string().optional(),
+  cuisine: z.string().optional(),
+  myRecipes: z.boolean().optional(),
+  sortBy: z.enum(["default", "calories", "protein", "carbs", "fat", "time", "name"]).default("default"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  // Range filters
+  minCalories: z.number().min(0).optional(),
   maxCalories: z.number().min(0).optional(),
-  maxPrepTime: z.number().min(0).optional(),
-  maxCookTime: z.number().min(0).optional(),
-  isPublic: z.boolean().optional(),
+  minProtein: z.number().min(0).optional(),
+  maxProtein: z.number().min(0).optional(),
+  minCarbs: z.number().min(0).optional(),
+  maxCarbs: z.number().min(0).optional(),
+  minFat: z.number().min(0).optional(),
+  maxFat: z.number().min(0).optional(),
+  minTime: z.number().min(0).optional(),
+  maxTime: z.number().min(0).optional(),
 });

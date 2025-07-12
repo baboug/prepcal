@@ -1,5 +1,3 @@
-import { Separator } from "@/components/ui/separator";
-
 interface SiteHeaderProps {
   title: string;
 }

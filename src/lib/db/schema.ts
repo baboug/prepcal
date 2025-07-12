@@ -162,7 +162,6 @@ export const recipe = pgTable(
     imageUrl: text("image_url"),
     sourceUrl: text("source_url"),
     videoUrl: text("video_url"),
-    isPublic: boolean("is_public").notNull().default(false),
     createdAt: timestamp("created_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),
@@ -173,7 +172,6 @@ export const recipe = pgTable(
   (table) => ({
     userIdIdx: index("recipe_user_id_idx").on(table.userId),
     nameIdx: index("recipe_name_idx").on(table.name),
-    isPublicIdx: index("recipe_is_public_idx").on(table.isPublic),
     categoryIdx: index("recipe_category_idx").on(table.category),
     cuisineIdx: index("recipe_cuisine_idx").on(table.cuisine),
     keywordsIdx: index("recipe_keywords_idx").on(table.keywords),

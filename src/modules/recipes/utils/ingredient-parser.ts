@@ -1,5 +1,5 @@
+import { REGEX, STANDARD_UNITS, TEXT_FRACTION_MAP, UNICODE_FRACTION_MAP, UNIT_MAP } from "../constants";
 import type { Measurement, ParsedIngredient } from "../types";
-import { REGEX, STANDARD_UNITS, TEXT_FRACTION_MAP, UNICODE_FRACTION_MAP, UNIT_MAP } from "./constants";
 import { capitalizeIngredient, cleanIngredient, cleanText, decodeHtmlEntities } from "./text-processing";
 
 function extractNotes(ingredient: string): string {

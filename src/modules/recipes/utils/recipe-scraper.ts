@@ -1,7 +1,6 @@
 import * as cheerio from "cheerio";
-
+import { REGEX } from "../constants";
 import type { JsonLdRecipe, ScrapedRecipe } from "../types";
-import { REGEX } from "./constants";
 import { getBestImage } from "./image-processing";
 import { parseIngredient } from "./ingredient-parser";
 import { parseInstructions } from "./instruction-parser";
@@ -67,7 +66,6 @@ function processRecipeData(jsonLd: JsonLdRecipe, url: string): ScrapedRecipe {
     sourceUrl: url,
     imageUrl: getBestImage(jsonLd.image),
     videoUrl: jsonLd.video?.contentUrl || jsonLd.video?.embedUrl,
-    isPublic: true,
   };
 }
 

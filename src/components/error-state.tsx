@@ -7,11 +7,13 @@ interface ErrorStateProps {
 
 export function ErrorState({ title, description }: ErrorStateProps) {
   return (
-    <div className="flex flex-1 items-center justify-center px-8 py-4">
-      <div className="flex flex-col items-center justify-center gap-y-6 rounded-lg bg-background p-10 shadow-sm">
-        <AlertCircleIcon className="size-6 text-destructive" />
-        <div className="flex flex-col gap-y-2 text-center">
-          <h6 className="font-semibold text-lg">{title}</h6>
+    <div className="fade-in-50 mx-auto flex min-h-80 animate-in flex-col items-center justify-center rounded-lg border border-destructive/20 border-dashed p-8 text-center">
+      <div className="flex flex-col items-center justify-center gap-4">
+        <div className="flex size-20 items-center justify-center rounded-full bg-destructive/10">
+          <AlertCircleIcon className="size-8 text-destructive" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <h2 className="font-semibold text-destructive text-xl">{title}</h2>
           <p className="text-sm">{description}</p>
         </div>
       </div>

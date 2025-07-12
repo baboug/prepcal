@@ -1,5 +1,7 @@
+import type { inferRouterOutputs } from "@trpc/server";
 import type { z } from "zod";
 
+import type { AppRouter } from "@/lib/trpc/routers/_app";
 import type {
   createRecipeSchema,
   ingredientSchema,
@@ -10,6 +12,9 @@ import type {
   scrapeRecipeSchema,
   updateRecipeSchema,
 } from "./schemas";
+
+export type RecipesGetOne = inferRouterOutputs<AppRouter>["recipes"]["getOne"];
+export type RecipesGetMany = inferRouterOutputs<AppRouter>["recipes"]["getMany"]["items"];
 
 export type RecipeData = z.infer<typeof recipeSchema>;
 export type CreateRecipeData = z.infer<typeof createRecipeSchema>;
@@ -52,7 +57,6 @@ export interface ScrapedRecipe {
   sourceUrl: string;
   imageUrl: string | null;
   videoUrl?: string;
-  isPublic?: boolean;
 }
 
 export interface JsonLdRecipe {

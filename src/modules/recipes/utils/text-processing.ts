@@ -1,7 +1,7 @@
 import { decode } from "html-entities";
 
 import { capitalizeWords } from "@/lib/utils";
-import { LOWERCASE_WORDS, REGEX } from "@/modules/recipes/utils/constants";
+import { LOWERCASE_WORDS, REGEX } from "@/modules/recipes/constants";
 
 export function decodeHtmlEntities(str: string): string {
   return decode(str);

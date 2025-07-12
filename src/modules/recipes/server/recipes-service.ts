@@ -1,9 +1,11 @@
 import { TRPCError } from "@trpc/server";
+
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { handleServiceError } from "@/lib/trpc/utils";
 import { createRecipeSchema, recipeFiltersSchema, scrapeRecipeSchema, updateRecipeSchema } from "../schemas";
 import type { CreateRecipeData, RecipeFilters, ScrapeRecipeInput } from "../types";
 import { scrapeRecipe } from "../utils/recipe-scraper";
-import * as recipeRepository from "./recipe-repository";
+import * as recipeRepository from "./recipes-repository";
 
 export const createRecipe = async (userId: string, data: CreateRecipeData) => {
   try {
@@ -51,7 +53,7 @@ export const getRecipe = async (id: number, userId?: string) => {
       });
     }
 
-    if (!recipe.isPublic && (!userId || recipe.userId !== userId)) {
+    if (recipe.userId && userId && recipe.userId !== userId) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "You don't have permission to view this recipe",
@@ -64,22 +66,17 @@ export const getRecipe = async (id: number, userId?: string) => {
   }
 };
 
-export const getUserRecipes = async (userId: string, filters: RecipeFilters = {}) => {
-  try {
-    const validatedFilters = recipeFiltersSchema.parse(filters);
-    return await recipeRepository.getUserRecipes(userId, validatedFilters);
-  } catch (error) {
-    handleServiceError(error, "Failed to get user recipes");
+export const getRecipes = async (
+  userId: string,
+  filters: RecipeFilters = {
+    page: DEFAULT_PAGE,
+    pageSize: DEFAULT_PAGE_SIZE,
+    sortBy: "default",
+    sortOrder: "desc",
   }
-};
-
-export const getPublicRecipes = async (filters: RecipeFilters = {}) => {
-  try {
-    const validatedFilters = recipeFiltersSchema.parse(filters);
-    return await recipeRepository.getPublicRecipes(validatedFilters);
-  } catch (error) {
-    handleServiceError(error, "Failed to get public recipes");
-  }
+) => {
+  const validatedFilters = recipeFiltersSchema.parse(filters);
+  return await recipeRepository.getRecipes(userId, validatedFilters);
 };
 
 export const deleteRecipe = async (id: number, userId: string) => {
@@ -120,7 +117,6 @@ export const scrapeAndCreateRecipe = async (userId: string, input: ScrapeRecipeI
 
     const recipeData: CreateRecipeData = {
       ...scrapedData,
-      isPublic: scrapedData.isPublic ?? false,
       imageUrl: scrapedData.imageUrl ?? undefined,
     };
 

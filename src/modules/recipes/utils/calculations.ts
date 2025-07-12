@@ -1,7 +1,14 @@
 import { CARB_CALORIES_PER_GRAM, FAT_CALORIES_PER_GRAM, PROTEIN_CALORIES_PER_GRAM } from "@/lib/constants";
-import type { MacroPercentages, ScrapedRecipe } from "../types";
+import type { MacroPercentages } from "../types";
 
-export const calculateMacroPercentages = (recipe: ScrapedRecipe): MacroPercentages | null => {
+export const calculateMacroPercentages = (recipe: {
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  calories: number | null;
+}): MacroPercentages | null => {
   if (!(recipe.macros && recipe.calories)) {
     return null;
   }

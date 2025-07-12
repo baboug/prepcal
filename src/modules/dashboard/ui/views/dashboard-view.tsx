@@ -14,7 +14,7 @@ interface DashboardViewProps {
 
 export function DashboardView({ session }: DashboardViewProps) {
   return (
-    <main>
+    <>
       <SiteHeader title={`👋 Welcome back, ${getUserFirstName(session.user)}`} />
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
@@ -27,6 +27,6 @@ export function DashboardView({ session }: DashboardViewProps) {
           </div>
         </div>
       </div>
-    </main>
+    </>
   );
 }

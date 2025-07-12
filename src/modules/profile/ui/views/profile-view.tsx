@@ -23,9 +23,17 @@ export function ProfileView() {
 }
 
 export function ProfileViewSkeleton() {
-  return <LoadingState description="Please wait while we load your profile." title="Loading profile" />;
+  return (
+    <div className="p-4 lg:p-6">
+      <LoadingState description="Please wait while we load your profile." title="Loading profile" />
+    </div>
+  );
 }
 
 export function ProfileViewError() {
-  return <ErrorState description="Something went wrong. Please try again later." title="Error loading profile" />;
+  return (
+    <div className="p-4 lg:p-6">
+      <ErrorState description="Something went wrong. Please try again later." title="Error loading profile" />
+    </div>
+  );
 }
