@@ -15,7 +15,8 @@ export function buildFilterConditions(
   const conditions: SQL[] = [];
 
   if (filters.search) {
-    conditions.push(ilike(recipe.name, `%${filters.search}%`));
+    const escapedSearch = filters.search.replace(/[%_]/g, "\\$&");
+    conditions.push(ilike(recipe.name, `%${escapedSearch}%`));
   }
 
   if (filters.category) {
@@ -36,36 +37,44 @@ export function buildFilterConditions(
   }
 
   if (filters.minProtein) {
-    conditions.push(gte(sql`CAST(${recipe.macros}->>'protein' AS NUMERIC)`, filters.minProtein));
+    conditions.push(gte(getMacroField("protein"), filters.minProtein));
   }
 
   if (filters.maxProtein) {
-    conditions.push(lte(sql`CAST(${recipe.macros}->>'protein' AS NUMERIC)`, filters.maxProtein));
+    conditions.push(lte(getMacroField("protein"), filters.maxProtein));
   }
 
   if (filters.minCarbs) {
-    conditions.push(gte(sql`CAST(${recipe.macros}->>'carbs' AS NUMERIC)`, filters.minCarbs));
+    conditions.push(gte(getMacroField("carbs"), filters.minCarbs));
   }
 
   if (filters.maxCarbs) {
-    conditions.push(lte(sql`CAST(${recipe.macros}->>'carbs' AS NUMERIC)`, filters.maxCarbs));
+    conditions.push(lte(getMacroField("carbs"), filters.maxCarbs));
   }
 
   if (filters.minFat) {
-    conditions.push(gte(sql`CAST(${recipe.macros}->>'fat' AS NUMERIC)`, filters.minFat));
+    conditions.push(gte(getMacroField("fat"), filters.minFat));
   }
 
   if (filters.maxFat) {
-    conditions.push(lte(sql`CAST(${recipe.macros}->>'fat' AS NUMERIC)`, filters.maxFat));
+    conditions.push(lte(getMacroField("fat"), filters.maxFat));
   }
 
   if (filters.minTime) {
-    conditions.push(gte(sql`COALESCE(${recipe.prepTime}, 0) + COALESCE(${recipe.cookTime}, 0)`, filters.minTime));
+    conditions.push(gte(getTotalTimeField(), filters.minTime));
   }
 
   if (filters.maxTime) {
-    conditions.push(lte(sql`COALESCE(${recipe.prepTime}, 0) + COALESCE(${recipe.cookTime}, 0)`, filters.maxTime));
+    conditions.push(lte(getTotalTimeField(), filters.maxTime));
   }
 
   return conditions;
+}
+
+function getMacroField(field: string) {
+  return sql`CAST(${recipe.macros}->>'${field}' AS NUMERIC)`;
+}
+
+function getTotalTimeField() {
+  return sql`COALESCE(${recipe.prepTime}, 0) + COALESCE(${recipe.cookTime}, 0)`;
 }

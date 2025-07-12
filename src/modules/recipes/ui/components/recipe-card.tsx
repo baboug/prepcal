@@ -42,7 +42,7 @@ export function RecipeCard({ recipe, userId }: RecipeCardProps) {
 
 function RecipeImage({ recipe }: { recipe: Recipe }) {
   return (
-    <div className="aspect-video overflow-hidden">
+    <div className="relative aspect-video overflow-hidden">
       {recipe.imageUrl ? (
         <Image
           alt={recipe.name}
@@ -87,6 +87,10 @@ function RecipeBadges({ recipe, userId }: { recipe: Recipe; userId: string }) {
 
 function RecipeMacros({ recipe }: { recipe: Recipe }) {
   const macroPercentages = calculateMacroPercentages(recipe);
+
+  if (!recipe.macros) {
+    return null;
+  }
 
   return (
     <div className="grid grid-cols-3 gap-2 border-t pt-2">

@@ -53,7 +53,7 @@ export const getRecipe = async (id: number, userId?: string) => {
       });
     }
 
-    if (recipe.userId && userId && recipe.userId !== userId) {
+    if (recipe.userId && recipe.userId !== userId) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "You don't have permission to view this recipe",

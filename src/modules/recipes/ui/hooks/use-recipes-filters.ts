@@ -88,6 +88,7 @@ export function useRecipesFilters() {
     !!filters.cuisine,
     filters.myRecipes,
     filters.sortBy !== "default",
+    filters.sortOrder !== "desc",
     filters.minCalories > 0,
     filters.maxCalories > 0,
     filters.minProtein > 0,
