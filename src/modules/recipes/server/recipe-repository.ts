@@ -1,10 +1,11 @@
 import "server-only";
 
-import { and, eq, ilike, lte, or, type SQL } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { type Recipe, recipe } from "@/lib/db/schema";
 import type { RecipeFilters } from "../types";
+import { buildFilterConditions } from "../utils/filters";
 
 export type InsertRecipe = typeof recipe.$inferInsert;
 
@@ -35,49 +36,7 @@ export const getUserRecipe = async (id: number, userId: string): Promise<Recipe 
 };
 
 export const getUserRecipes = async (userId: string, filters: RecipeFilters = {}): Promise<Recipe[]> => {
-  const conditions: SQL[] = [eq(recipe.userId, userId)];
-
-  if (filters.category && filters.category.length > 0) {
-    const categoryConditions = filters.category.map((cat) => ilike(recipe.category, `%${cat}%`));
-    if (categoryConditions.length > 0) {
-      const orCondition = or(...categoryConditions);
-      if (orCondition) {
-        conditions.push(orCondition);
-      }
-    }
-  }
-
-  if (filters.cuisine && filters.cuisine.length > 0) {
-    const cuisineConditions = filters.cuisine.map((cui) => ilike(recipe.cuisine, `%${cui}%`));
-    if (cuisineConditions.length > 0) {
-      const orCondition = or(...cuisineConditions);
-      if (orCondition) {
-        conditions.push(orCondition);
-      }
-    }
-  }
-
-  if (filters.keywords && filters.keywords.length > 0) {
-    const keywordConditions = filters.keywords.map((keyword) => ilike(recipe.keywords, `%${keyword}%`));
-    if (keywordConditions.length > 0) {
-      const orCondition = or(...keywordConditions);
-      if (orCondition) {
-        conditions.push(orCondition);
-      }
-    }
-  }
-
-  if (filters.maxCalories) {
-    conditions.push(lte(recipe.calories, filters.maxCalories));
-  }
-
-  if (filters.maxPrepTime) {
-    conditions.push(lte(recipe.prepTime, filters.maxPrepTime));
-  }
-
-  if (filters.maxCookTime) {
-    conditions.push(lte(recipe.cookTime, filters.maxCookTime));
-  }
+  const conditions = [eq(recipe.userId, userId), ...buildFilterConditions(filters)];
 
   if (filters.isPublic !== undefined) {
     conditions.push(eq(recipe.isPublic, filters.isPublic));
@@ -91,50 +50,7 @@ export const getUserRecipes = async (userId: string, filters: RecipeFilters = {}
 };
 
 export const getPublicRecipes = async (filters: RecipeFilters = {}): Promise<Recipe[]> => {
-  const conditions: SQL[] = [eq(recipe.isPublic, true)];
-
-  // Apply same filters as getUserRecipes
-  if (filters.category && filters.category.length > 0) {
-    const categoryConditions = filters.category.map((cat) => ilike(recipe.category, `%${cat}%`));
-    if (categoryConditions.length > 0) {
-      const orCondition = or(...categoryConditions);
-      if (orCondition) {
-        conditions.push(orCondition);
-      }
-    }
-  }
-
-  if (filters.cuisine && filters.cuisine.length > 0) {
-    const cuisineConditions = filters.cuisine.map((cui) => ilike(recipe.cuisine, `%${cui}%`));
-    if (cuisineConditions.length > 0) {
-      const orCondition = or(...cuisineConditions);
-      if (orCondition) {
-        conditions.push(orCondition);
-      }
-    }
-  }
-
-  if (filters.keywords && filters.keywords.length > 0) {
-    const keywordConditions = filters.keywords.map((keyword) => ilike(recipe.keywords, `%${keyword}%`));
-    if (keywordConditions.length > 0) {
-      const orCondition = or(...keywordConditions);
-      if (orCondition) {
-        conditions.push(orCondition);
-      }
-    }
-  }
-
-  if (filters.maxCalories) {
-    conditions.push(lte(recipe.calories, filters.maxCalories));
-  }
-
-  if (filters.maxPrepTime) {
-    conditions.push(lte(recipe.prepTime, filters.maxPrepTime));
-  }
-
-  if (filters.maxCookTime) {
-    conditions.push(lte(recipe.cookTime, filters.maxCookTime));
-  }
+  const conditions = [eq(recipe.isPublic, true), ...buildFilterConditions(filters)];
 
   return await db
     .select()

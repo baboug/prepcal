@@ -97,5 +97,5 @@ The script includes comprehensive tests covering:
 Run tests with:
 
 ```bash
-pnpm test src/features/recipes/scripts/seed-recipes.test.ts
+pnpm test src/modules/recipes/scripts/seed-recipes.test.ts
 ```

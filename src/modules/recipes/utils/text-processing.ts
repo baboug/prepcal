@@ -1,41 +1,15 @@
+import { decode } from "html-entities";
+
 import { capitalizeWords } from "@/lib/utils";
 import { LOWERCASE_WORDS, REGEX } from "@/modules/recipes/utils/constants";
 
+export function decodeHtmlEntities(str: string): string {
+  return decode(str);
+}
+
 export function cleanText(text: string): string {
   return (
-    text
-      // HTML entities for quotes and apostrophes
-      .replace(/&#39;/g, "'")
-      .replace(/&#039;/g, "'")
-      .replace(/&apos;/g, "'")
-      .replace(/&quot;/g, '"')
-      .replace(/&#x27;/g, "'")
-      .replace(/&#x22;/g, '"')
-      .replace(/&ldquo;/g, '"')
-      .replace(/&rdquo;/g, '"')
-      .replace(/&lsquo;/g, "'")
-      .replace(/&rsquo;/g, "'")
-      .replace(/&#8217;/g, "'")
-      .replace(/&#8216;/g, "'")
-
-      // Common HTML entities
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&nbsp;/g, " ")
-
-      // Dashes and hyphens
-      .replace(/&#8211;/g, "-")
-      .replace(/&#8212;/g, "—")
-      .replace(/&ndash;/g, "-")
-      .replace(/&mdash;/g, "—")
-
-      // Fractions and special characters
-      .replace(/&frac12;/g, "½")
-      .replace(/&frac14;/g, "¼")
-      .replace(/&frac34;/g, "¾")
-      .replace(/&deg;/g, "°")
-
+    decodeHtmlEntities(text)
       // Clean up parentheses formatting
       .replace(REGEX.PAREN_CLEANUP_OPEN, " (")
       .replace(REGEX.PAREN_CLEANUP_CLOSE, " )")

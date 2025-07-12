@@ -122,9 +122,9 @@ export const recipe = pgTable(
     userId: text("user_id").references(() => user.id, { onDelete: "cascade" }), // Optional if it's a public recipe
     name: text("name").notNull(),
     description: text("description"),
-    category: text("category").array(),
-    cuisine: text("cuisine").array(),
-    keywords: text("keywords").array(),
+    category: text("category").array().notNull().default([]),
+    cuisine: text("cuisine").array().notNull().default([]),
+    keywords: text("keywords").array().notNull().default([]),
     ingredients: jsonb("ingredients")
       .$type<
         {
@@ -150,18 +150,25 @@ export const recipe = pgTable(
     prepTime: integer("prep_time"),
     cookTime: integer("cook_time"),
     calories: integer("calories"),
-    macros: jsonb("macros").$type<{
-      protein: number;
-      carbs: number;
-      fat: number;
-    }>(),
+    macros: jsonb("macros")
+      .$type<{
+        protein: number;
+        carbs: number;
+        fat: number;
+      }>()
+      .notNull()
+      .default({ protein: 0, carbs: 0, fat: 0 }),
     servings: integer("servings"),
     imageUrl: text("image_url"),
     sourceUrl: text("source_url"),
     videoUrl: text("video_url"),
     isPublic: boolean("is_public").notNull().default(false),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at")
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    updatedAt: timestamp("updated_at")
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
   },
   (table) => ({
     userIdIdx: index("recipe_user_id_idx").on(table.userId),

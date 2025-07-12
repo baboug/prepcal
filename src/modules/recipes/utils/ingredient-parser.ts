@@ -1,6 +1,6 @@
 import type { Measurement, ParsedIngredient } from "../types";
 import { REGEX, STANDARD_UNITS, TEXT_FRACTION_MAP, UNICODE_FRACTION_MAP, UNIT_MAP } from "./constants";
-import { capitalizeIngredient, cleanIngredient, cleanText } from "./text-processing";
+import { capitalizeIngredient, cleanIngredient, cleanText, decodeHtmlEntities } from "./text-processing";
 
 function extractNotes(ingredient: string): string {
   const matches = ingredient.match(REGEX.NOTES_PATTERN);
@@ -21,6 +21,9 @@ function fractionToDecimal(str: string): number {
 
   if (str.includes("/")) {
     const [num, denom] = str.split("/").map(Number);
+    if (Number.isNaN(num) || Number.isNaN(denom) || denom === 0) {
+      return 0;
+    }
     return num / denom;
   }
   return Number(str);
@@ -64,7 +67,7 @@ function extractMetricMeasurement(str: string): { amount: number; unit: string }
   };
 }
 
-function handleMetricImperialRange(str: string): { amount: number; unit: string } {
+function processMetricImperialRange(str: string): { amount: number; unit: string } {
   const parts = str.split(REGEX.SLASH_SEPARATOR);
   if (parts.length !== 2) {
     return { amount: 0, unit: "" };
@@ -141,274 +144,243 @@ function parseMultiplierFormat(cleanedIngredient: string, notes: string): Parsed
   };
 }
 
-function decodeHtmlEntities(str: string): string {
-  return str
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#8211;/g, "-")
-    .replace(/&ndash;/g, "-")
-    .replace(/&mdash;/g, "-")
-    .replace(/&#x2013;/g, "-")
-    .replace(/&#x2014;/g, "-")
-    .replace(/&#45;/g, "-")
-    .replace(/&#8212;/g, "-");
+function findUnitInText(text: string): { unit?: string; remainingText: string } {
+  const unitWords = text.split(REGEX.WHITESPACE);
+  let unit: string | undefined;
+  let remainingText = text;
+
+  // Try to find the longest valid unit
+  for (let i = 1; i <= 2; i++) {
+    const possibleUnit = unitWords.slice(0, i).join(" ");
+    const normalizedUnit = normalizeUnit(possibleUnit);
+    if (STANDARD_UNITS.includes(normalizedUnit)) {
+      unit = normalizedUnit;
+      remainingText = unitWords.slice(i).join(" ");
+      break;
+    }
+  }
+
+  return { unit, remainingText: remainingText.trim() };
+}
+
+function handleMixedNumberRange(str: string): Measurement | null {
+  const mixedNumberRangeMatch = str.match(REGEX.MIXED_NUMBER_RANGE);
+  if (!mixedNumberRangeMatch) {
+    return null;
+  }
+
+  const [, num1, num2, rest] = mixedNumberRangeMatch;
+  const amount1 = parseMixedNumber(num1.trim());
+  const amount2 = parseMixedNumber(num2.trim());
+  const amount = (amount1 + amount2) / 2;
+
+  const { unit, remainingText } = findUnitInText(rest);
+
+  return {
+    amount,
+    unit,
+    remainingText,
+  };
+}
+
+function handleCompoundBoxMeasurement(str: string): Measurement | null {
+  const compoundBoxMatch = str.match(REGEX.COMPOUND_BOX_MEASUREMENT);
+  if (!compoundBoxMatch) {
+    return null;
+  }
+
+  const [, _, amount, rest] = compoundBoxMatch;
+  return {
+    amount: Number(amount),
+    unit: "oz",
+    remainingText: rest.trim(),
+  };
+}
+
+function handleContainerMeasurement(str: string): Measurement | null {
+  const containerMatch = str.match(REGEX.CONTAINER_AMOUNT);
+  if (!containerMatch) {
+    return null;
+  }
+
+  const [, amount, container, remainingText] = containerMatch;
+  return {
+    amount: Number(amount),
+    unit: normalizeUnit(container),
+    remainingText: remainingText.trim(),
+  };
+}
+
+function handleMetricImperialRange(str: string): Measurement | null {
+  const metricImperialRangeMatch = str.match(REGEX.FULL_METRIC_IMPERIAL_RANGE);
+  if (!metricImperialRangeMatch) {
+    return null;
+  }
+
+  const [, measurement, remainingText] = metricImperialRangeMatch;
+  const { amount, unit } = processMetricImperialRange(measurement);
+  return {
+    amount,
+    unit,
+    remainingText: cleanName(remainingText),
+  };
+}
+
+function handleMetricImperialSlash(str: string): Measurement | null {
+  const metricImperialMatch = str.match(REGEX.METRIC_IMPERIAL_SLASH);
+  if (!metricImperialMatch) {
+    return null;
+  }
+
+  const [, amount1, unit1] = metricImperialMatch;
+  const normalizedUnit = normalizeUnit(unit1);
+  return {
+    amount: Number(amount1),
+    unit: normalizedUnit,
+    remainingText: metricImperialMatch[5].trim(),
+  };
+}
+
+function handleHyphenatedMeasurement(str: string): Measurement | null {
+  const hyphenatedMatch = str.match(REGEX.HYPHENATED_MEASUREMENT);
+  if (!hyphenatedMatch) {
+    return null;
+  }
+
+  const [, amount, unit, rest] = hyphenatedMatch;
+  return {
+    amount: Number(amount),
+    unit: normalizeUnit(unit),
+    remainingText: rest.trim(),
+  };
+}
+
+function handleFractionRange(str: string): Measurement | null {
+  const fractionRangeMatch = str.match(REGEX.FRACTION_RANGE);
+  if (!fractionRangeMatch) {
+    return null;
+  }
+
+  const [, num1, num2, rest] = fractionRangeMatch;
+  const amount1 = num1.match(REGEX.UNICODE_FRACTION_CHARS) ? UNICODE_FRACTION_MAP[num1] : fractionToDecimal(num1);
+  const amount2 = num2.match(REGEX.UNICODE_FRACTION_CHARS) ? UNICODE_FRACTION_MAP[num2] : fractionToDecimal(num2);
+  const amount = (amount1 + amount2) / 2;
+
+  const { unit, remainingText } = findUnitInText(rest);
+
+  return {
+    amount,
+    unit,
+    remainingText,
+  };
+}
+
+function handleMixedUnicodeFraction(str: string): Measurement | null {
+  const mixedUnicodeFractionMatch = str.match(REGEX.MIXED_UNICODE_FRACTION);
+  if (!mixedUnicodeFractionMatch) {
+    return null;
+  }
+
+  const [, amount, rest] = mixedUnicodeFractionMatch;
+  const parsedAmount = parseMixedNumber(amount);
+
+  const { unit, remainingText } = findUnitInText(rest);
+
+  return {
+    amount: parsedAmount,
+    unit,
+    remainingText,
+  };
+}
+
+function handleUnicodeFraction(str: string): Measurement | null {
+  const unicodeFractionMatch = str.match(REGEX.UNICODE_FRACTION);
+  if (!unicodeFractionMatch) {
+    return null;
+  }
+
+  const [, fraction, rest] = unicodeFractionMatch;
+  const amount = UNICODE_FRACTION_MAP[fraction];
+
+  const { unit, remainingText } = findUnitInText(rest);
+
+  return {
+    amount,
+    unit,
+    remainingText,
+  };
+}
+
+function handleFractionWithUnit(str: string): Measurement | null {
+  const fractionUnitMatch = str.match(REGEX.FRACTION_WITH_UNIT);
+  if (!fractionUnitMatch) {
+    return null;
+  }
+
+  const [, amount, unit, rest] = fractionUnitMatch;
+  const normalizedUnit = normalizeUnit(unit.toLowerCase());
+  return {
+    amount: parseMixedNumber(amount),
+    unit: normalizedUnit,
+    remainingText: rest.trim(),
+  };
+}
+
+function handleTextFraction(str: string): Measurement | null {
+  const textFractionPattern = Object.keys(TEXT_FRACTION_MAP)
+    .sort((a, b) => b.length - a.length)
+    .map((pattern) => pattern.replace(REGEX.ANY_WHITESPACE, "\\s+"))
+    .join("|");
+
+  const textFractionMatch = str.match(new RegExp(`^(${textFractionPattern})\\s+(?:of\\s+)?(?:a|an)?\\s+(.*)`, "i"));
+  if (!textFractionMatch) {
+    return null;
+  }
+
+  const [, fraction, rest] = textFractionMatch;
+  const amount = TEXT_FRACTION_MAP[fraction.toLowerCase().replace(REGEX.ANY_WHITESPACE, " ")];
+
+  const { unit, remainingText } = findUnitInText(rest);
+
+  return {
+    amount,
+    unit,
+    remainingText,
+  };
+}
+
+function handleSimpleNumber(str: string): Measurement | null {
+  const numberMatch = str.match(REGEX.SIMPLE_NUMBER);
+  if (!numberMatch) {
+    return null;
+  }
+
+  const [, amount, rest] = numberMatch;
+  const { unit, remainingText } = findUnitInText(rest);
+
+  return {
+    amount: Number(amount),
+    unit,
+    remainingText,
+  };
 }
 
 function extractMeasurement(str: string): Measurement | null {
-  // Handle mixed number ranges with unicode fractions (e.g., "1 ½ - 2 ¼")
-  const mixedNumberRangeMatch = str.match(REGEX.MIXED_NUMBER_RANGE);
-  if (mixedNumberRangeMatch) {
-    const [, num1, num2, rest] = mixedNumberRangeMatch;
-    const amount1 = parseMixedNumber(num1.trim());
-    const amount2 = parseMixedNumber(num2.trim());
-    const amount = (amount1 + amount2) / 2;
-
-    // Look for unit in the remaining text
-    const unitWords = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let remainingText = rest;
-
-    // Try to find the longest valid unit
-    for (let i = 1; i <= 2; i++) {
-      const possibleUnit = unitWords.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        remainingText = unitWords.slice(i).join(" ");
-        break;
-      }
-    }
-
-    return {
-      amount,
-      unit,
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  // Handle compound measurements with box and oz first
-  const compoundBoxMatch = str.match(REGEX.COMPOUND_BOX_MEASUREMENT);
-  if (compoundBoxMatch) {
-    const [, _, amount, rest] = compoundBoxMatch;
-    return {
-      amount: Number(amount),
-      unit: "oz",
-      remainingText: rest.trim(),
-    };
-  }
-
-  // Handle container measurements with 'of'
-  const containerMatch = str.match(REGEX.CONTAINER_AMOUNT);
-  if (containerMatch) {
-    const [, amount, container, remainingText] = containerMatch;
-    return {
-      amount: Number(amount),
-      unit: normalizeUnit(container),
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  // Handle metric/imperial format with ranges (e.g., "2-2.25kg/ 4 - 4.5 lb")
-  const metricImperialRangeMatch = str.match(REGEX.FULL_METRIC_IMPERIAL_RANGE);
-  if (metricImperialRangeMatch) {
-    const [, measurement, remainingText] = metricImperialRangeMatch;
-    const { amount, unit } = handleMetricImperialRange(measurement);
-    return {
-      amount,
-      unit,
-      remainingText: cleanName(remainingText),
-    };
-  }
-
-  // Handle metric/imperial format with slashes (e.g., "500g / 1lb")
-  const metricImperialMatch = str.match(REGEX.METRIC_IMPERIAL_SLASH);
-  if (metricImperialMatch) {
-    const [, amount1, unit1] = metricImperialMatch;
-    const normalizedUnit = normalizeUnit(unit1);
-    return {
-      amount: Number(amount1),
-      unit: normalizedUnit,
-      remainingText: metricImperialMatch[5].trim(),
-    };
-  }
-
-  // Handle hyphenated measurements (e.g., "3-ounce")
-  const hyphenatedMatch = str.match(REGEX.HYPHENATED_MEASUREMENT);
-  if (hyphenatedMatch) {
-    const [, amount, unit, rest] = hyphenatedMatch;
-    return {
-      amount: Number(amount),
-      unit: normalizeUnit(unit),
-      remainingText: rest.trim(),
-    };
-  }
-
-  // Handle fraction ranges (e.g., "1/2-1", "1/2 - 3/4", "½ to 1")
-  const fractionRangeMatch = str.match(REGEX.FRACTION_RANGE);
-  if (fractionRangeMatch) {
-    const [, num1, num2, rest] = fractionRangeMatch;
-    const amount1 = num1.match(REGEX.UNICODE_FRACTION_CHARS) ? UNICODE_FRACTION_MAP[num1] : fractionToDecimal(num1);
-    const amount2 = num2.match(REGEX.UNICODE_FRACTION_CHARS) ? UNICODE_FRACTION_MAP[num2] : fractionToDecimal(num2);
-    const amount = (amount1 + amount2) / 2;
-
-    // Look for unit in the remaining text
-    const unitWords = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let remainingText = rest;
-
-    // Try to find the longest valid unit
-    for (let i = 1; i <= 2; i++) {
-      const possibleUnit = unitWords.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        remainingText = unitWords.slice(i).join(" ");
-        break;
-      }
-    }
-
-    return {
-      amount,
-      unit,
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  // Handle mixed numbers with unicode fractions (e.g., "2½")
-  const mixedUnicodeFractionMatch = str.match(REGEX.MIXED_UNICODE_FRACTION);
-  if (mixedUnicodeFractionMatch) {
-    const [, amount, rest] = mixedUnicodeFractionMatch;
-    const parsedAmount = parseMixedNumber(amount);
-
-    // Look for unit in the remaining text
-    const unitWords = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let remainingText = rest;
-
-    // Try to find the longest valid unit
-    for (let i = 1; i <= 2; i++) {
-      const possibleUnit = unitWords.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        remainingText = unitWords.slice(i).join(" ");
-        break;
-      }
-    }
-
-    return {
-      amount: parsedAmount,
-      unit,
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  // Handle simple unicode fractions
-  const unicodeFractionMatch = str.match(REGEX.UNICODE_FRACTION);
-  if (unicodeFractionMatch) {
-    const [, fraction, rest] = unicodeFractionMatch;
-    const amount = UNICODE_FRACTION_MAP[fraction];
-
-    // Look for unit in the remaining text
-    const unitWords = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let remainingText = rest;
-
-    // Try to find the longest valid unit
-    for (let i = 1; i <= 2; i++) {
-      const possibleUnit = unitWords.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        remainingText = unitWords.slice(i).join(" ");
-        break;
-      }
-    }
-
-    return {
-      amount,
-      unit,
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  // Handle simple fractions with units (e.g. "1/2 teaspoon", "3/4 cups", "1/4 c.")
-  const fractionUnitMatch = str.match(REGEX.FRACTION_WITH_UNIT);
-  if (fractionUnitMatch) {
-    const [, amount, unit, rest] = fractionUnitMatch;
-    const normalizedUnit = normalizeUnit(unit.toLowerCase());
-    return {
-      amount: parseMixedNumber(amount),
-      unit: normalizedUnit,
-      remainingText: rest.trim(),
-    };
-  }
-
-  // Handle text-based fractions before regular measurements
-  const textFractionPattern = Object.keys(TEXT_FRACTION_MAP)
-    .sort((a, b) => b.length - a.length) // Sort by length to match longer patterns first
-    .map((pattern) => pattern.replace(REGEX.ANY_WHITESPACE, "\\s+")) // Make spaces flexible
-    .join("|");
-  const textFractionMatch = str.match(new RegExp(`^(${textFractionPattern})\\s+(?:of\\s+)?(?:a|an)?\\s+(.*)`, "i"));
-  if (textFractionMatch) {
-    const [, fraction, rest] = textFractionMatch;
-    const amount = TEXT_FRACTION_MAP[fraction.toLowerCase().replace(REGEX.ANY_WHITESPACE, " ")];
-
-    // Look for unit in the remaining text
-    const unitWords = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let remainingText = rest;
-
-    // Try to find the longest valid unit
-    for (let i = 1; i <= 2; i++) {
-      const possibleUnit = unitWords.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        remainingText = unitWords.slice(i).join(" ");
-        break;
-      }
-    }
-
-    return {
-      amount,
-      unit,
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  // Match simple numbers
-  const numberMatch = str.match(REGEX.SIMPLE_NUMBER);
-  if (numberMatch) {
-    const [, amount, rest] = numberMatch;
-
-    // Look for unit in the remaining text
-    const unitWords = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let remainingText = rest;
-
-    // Try to find the longest valid unit
-    for (let i = 1; i <= 2; i++) {
-      const possibleUnit = unitWords.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        remainingText = unitWords.slice(i).join(" ");
-        break;
-      }
-    }
-
-    return {
-      amount: Number(amount),
-      unit,
-      remainingText: remainingText.trim(),
-    };
-  }
-
-  return null;
+  // Try each measurement type in order
+  return (
+    handleMixedNumberRange(str) ||
+    handleCompoundBoxMeasurement(str) ||
+    handleContainerMeasurement(str) ||
+    handleMetricImperialRange(str) ||
+    handleMetricImperialSlash(str) ||
+    handleHyphenatedMeasurement(str) ||
+    handleFractionRange(str) ||
+    handleMixedUnicodeFraction(str) ||
+    handleUnicodeFraction(str) ||
+    handleFractionWithUnit(str) ||
+    handleTextFraction(str) ||
+    handleSimpleNumber(str)
+  );
 }
 
 function extractNameFromNotes(notes: string): string {
@@ -420,83 +392,65 @@ function extractNameFromNotes(notes: string): string {
   return "";
 }
 
-export function parseIngredient(ingredient: string): ParsedIngredient {
-  // Decode HTML entities first
-  const decodedIngredient = decodeHtmlEntities(ingredient);
-
-  const notes = extractNotes(decodedIngredient);
-  const cleanedIngredient = cleanIngredient(decodedIngredient)
-    .replace(REGEX.NOTES_PATTERN, "")
-    .trim()
-    .replace(REGEX.ANY_WHITESPACE, " ");
-
-  // Try multiplier format first (e.g., "2 x 400g")
-  const multiplierResult = parseMultiplierFormat(cleanedIngredient, notes);
-  if (multiplierResult) {
-    return multiplierResult;
-  }
-
-  // Handle text-based fractions before regular measurements
+function parseTextBasedFraction(cleanedIngredient: string): ParsedIngredient | null {
   const textFractionPattern = Object.keys(TEXT_FRACTION_MAP)
-    .sort((a, b) => b.length - a.length) // Sort by length to match longer patterns first
-    .map((pattern) => pattern.replace(REGEX.ANY_WHITESPACE, "\\s+")) // Make spaces flexible
+    .sort((a, b) => b.length - a.length)
+    .map((pattern) => pattern.replace(REGEX.ANY_WHITESPACE, "\\s+"))
     .join("|");
+
   const textFractionMatch = cleanedIngredient.match(
     new RegExp(`^(${textFractionPattern})(?:\\s+(?:of\\s+)?(?:a|an)?)?\\s+(.*)`, "i")
   );
-  if (textFractionMatch) {
-    const [, fraction, rest] = textFractionMatch;
-    const amount = TEXT_FRACTION_MAP[fraction.toLowerCase().replace(REGEX.ANY_WHITESPACE, " ")];
 
-    // Split the remaining text into words
-    const words = rest.split(REGEX.WHITESPACE);
-    let unit: string | undefined;
-    let name: string = rest;
+  if (!textFractionMatch) {
+    return null;
+  }
 
-    // Try to find a unit in the first word or two
-    for (let i = 1; i <= 2 && i <= words.length; i++) {
-      const possibleUnit = words.slice(0, i).join(" ");
-      const normalizedUnit = normalizeUnit(possibleUnit);
-      if (STANDARD_UNITS.includes(normalizedUnit)) {
-        unit = normalizedUnit;
-        name = words.slice(i).join(" ");
-        break;
-      }
+  const [, fraction, rest] = textFractionMatch;
+  const amount = TEXT_FRACTION_MAP[fraction.toLowerCase().replace(REGEX.ANY_WHITESPACE, " ")];
+
+  const words = rest.split(REGEX.WHITESPACE);
+  let unit: string | undefined;
+  let name: string = rest;
+
+  for (let i = 1; i <= 2 && i <= words.length; i++) {
+    const possibleUnit = words.slice(0, i).join(" ");
+    const normalizedUnit = normalizeUnit(possibleUnit);
+    if (STANDARD_UNITS.includes(normalizedUnit)) {
+      unit = normalizedUnit;
+      name = words.slice(i).join(" ");
+      break;
     }
+  }
 
+  return {
+    name: capitalizeIngredient(name),
+    amount,
+    unit,
+  };
+}
+
+function handleNoMeasurement(cleanedIngredient: string, notes: string): ParsedIngredient {
+  if (notes && cleanedIngredient.match(REGEX.DIGIT_ONLY)) {
     return {
-      name: capitalizeIngredient(name),
-      amount,
-      unit,
+      name: capitalizeIngredient(notes),
+      amount: Number(cleanedIngredient),
       notes: notes || undefined,
     };
   }
 
-  // Try regular format
-  const measurement = extractMeasurement(cleanedIngredient);
-  if (!measurement) {
-    // If there's no measurement but there are notes, try to use them as the name
-    if (notes && cleanedIngredient.match(REGEX.DIGIT_ONLY)) {
-      return {
-        name: capitalizeIngredient(notes),
-        amount: Number(cleanedIngredient),
-        notes: notes || undefined,
-      };
-    }
+  return {
+    name: capitalizeIngredient(cleanText(cleanedIngredient)),
+    notes: notes || undefined,
+  };
+}
 
-    return {
-      name: capitalizeIngredient(cleanText(cleanedIngredient)),
-      notes: notes || undefined,
-    };
-  }
-
-  // Get the name from the measurement or notes if empty
+function buildFinalIngredient(measurement: Measurement, notes: string): ParsedIngredient {
   let name = cleanText(measurement.remainingText);
   if (!name && notes) {
     name = extractNameFromNotes(notes);
   }
 
-  // Special handling for compound measurements with bags/containers
   const compoundMatch = name.match(REGEX.COMPOUND_BAG_MEASUREMENT);
   if (compoundMatch) {
     const [, , container, rest] = compoundMatch;
@@ -510,8 +464,40 @@ export function parseIngredient(ingredient: string): ParsedIngredient {
 
   return {
     name: capitalizeIngredient(name),
-    amount: Number(measurement.amount.toFixed(3)),
+    amount: Math.round(measurement.amount * 1000) / 1000,
     unit: measurement.unit,
     notes: notes || undefined,
   };
+}
+
+export function parseIngredient(ingredient: string): ParsedIngredient {
+  const decodedIngredient = decodeHtmlEntities(ingredient);
+  const notes = extractNotes(decodedIngredient);
+  const cleanedIngredient = cleanIngredient(decodedIngredient)
+    .replace(REGEX.NOTES_PATTERN, "")
+    .trim()
+    .replace(REGEX.ANY_WHITESPACE, " ");
+
+  // Try multiplier format first
+  const multiplierResult = parseMultiplierFormat(cleanedIngredient, notes);
+  if (multiplierResult) {
+    return multiplierResult;
+  }
+
+  // Handle text-based fractions
+  const textFractionResult = parseTextBasedFraction(cleanedIngredient);
+  if (textFractionResult) {
+    return {
+      ...textFractionResult,
+      notes: notes || undefined,
+    };
+  }
+
+  // Try regular measurement format
+  const measurement = extractMeasurement(cleanedIngredient);
+  if (!measurement) {
+    return handleNoMeasurement(cleanedIngredient, notes);
+  }
+
+  return buildFinalIngredient(measurement, notes);
 }

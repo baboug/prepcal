@@ -12,7 +12,12 @@ function parseInstructionStep(instruction: string | RecipeInstruction): ParsedIn
     return [{ step: cleanText(instruction) }];
   }
 
-  if ("text" in instruction && typeof instruction.text === "string") {
+  if (
+    typeof instruction === "object" &&
+    instruction !== null &&
+    "text" in instruction &&
+    typeof instruction.text === "string"
+  ) {
     return [
       {
         step: cleanText(instruction.text),
@@ -23,7 +28,7 @@ function parseInstructionStep(instruction: string | RecipeInstruction): ParsedIn
 
   if ("itemListElement" in instruction && Array.isArray(instruction.itemListElement)) {
     return instruction.itemListElement.map((step) => ({
-      step: cleanText(step.text || step.name || ""),
+      step: cleanText(step.text ?? step.name ?? ""),
       video: getVideoUrl(step),
     }));
   }

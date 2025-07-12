@@ -11,6 +11,10 @@ export const calculateMacroPercentages = (recipe: ScrapedRecipe): MacroPercentag
   const fatCalories = recipe.macros.fat * FAT_CALORIES_PER_GRAM;
   const totalMacroCalories = proteinCalories + carbsCalories + fatCalories;
 
+  if (totalMacroCalories === 0) {
+    return null;
+  }
+
   return {
     protein: ((proteinCalories / totalMacroCalories) * 100).toFixed(1),
     carbs: ((carbsCalories / totalMacroCalories) * 100).toFixed(1),

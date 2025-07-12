@@ -36,8 +36,8 @@ export interface ScrapedRecipe {
     step: string;
     video?: {
       url: string;
-      duration: string;
-      thumbnailUrl: string;
+      duration?: string;
+      thumbnailUrl?: string;
     };
   }[];
   prepTime: number;

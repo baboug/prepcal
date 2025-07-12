@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-
+import { handleServiceError } from "@/lib/trpc/utils";
 import { profileSchema } from "../schemas";
 import type { ProfileData } from "../types";
 import { calculateNutritionProfile } from "../utils/calculations";
@@ -26,11 +26,7 @@ export const createProfile = async (userId: string, data: ProfileData) => {
 
     return mapProfileToResponse(profile);
   } catch (error) {
-    console.error("Error creating user profile:", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to create user profile",
-    });
+    handleServiceError(error, "Failed to create user profile");
   }
 };
 
@@ -56,11 +52,7 @@ export const updateProfile = async (userId: string, data: Partial<ProfileData>) 
 
     return mapProfileToResponse(updatedProfile);
   } catch (error) {
-    console.error("Error updating user profile:", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to update user profile",
-    });
+    handleServiceError(error, "Failed to update user profile");
   }
 };
 
@@ -77,10 +69,6 @@ export const getProfile = async (userId: string) => {
 
     return mapProfileToResponse(profile);
   } catch (error) {
-    console.error("Error getting user profile:", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to get user profile",
-    });
+    handleServiceError(error, "Failed to get user profile");
   }
 };

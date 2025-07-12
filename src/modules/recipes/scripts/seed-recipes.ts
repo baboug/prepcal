@@ -22,18 +22,19 @@ async function processBatch(db: ReturnType<typeof drizzle>, urls: string[], limi
   const results = await Promise.all(
     urls.map((url) =>
       limit(async () => {
-        const recipeData = await scrapeRecipe(url);
-        if (recipeData) {
-          try {
+        try {
+          const recipeData = await scrapeRecipe(url);
+          if (recipeData) {
             await db.insert(recipe).values(recipeData);
             console.log(`Successfully inserted recipe from ${url}`);
             return true;
-          } catch (error) {
-            console.error(`Failed to insert recipe from ${url}:`, error);
-            return false;
           }
+          console.log(`No recipe data found at ${url}`);
+          return false;
+        } catch (error) {
+          console.error(`Failed to process recipe from ${url}:`, error);
+          return false;
         }
-        return false;
       })
     )
   );

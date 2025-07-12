@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-
+import { handleServiceError } from "@/lib/trpc/utils";
 import { createRecipeSchema, recipeFiltersSchema, scrapeRecipeSchema, updateRecipeSchema } from "../schemas";
 import type { CreateRecipeData, RecipeFilters, ScrapeRecipeInput } from "../types";
 import { scrapeRecipe } from "../utils/recipe-scraper";
@@ -17,11 +17,7 @@ export const createRecipe = async (userId: string, data: CreateRecipeData) => {
     const recipe = await recipeRepository.createRecipe(recipeData);
     return recipe;
   } catch (error) {
-    console.error("Error creating recipe", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to create recipe",
-    });
+    handleServiceError(error, "Failed to create recipe");
   }
 };
 
@@ -40,11 +36,7 @@ export const updateRecipe = async (id: number, userId: string, data: Partial<Cre
     const updatedRecipe = await recipeRepository.updateRecipe(id, userId, validatedData);
     return updatedRecipe;
   } catch (error) {
-    console.error("Error updating recipe", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to update recipe",
-    });
+    handleServiceError(error, "Failed to update recipe");
   }
 };
 
@@ -68,11 +60,7 @@ export const getRecipe = async (id: number, userId?: string) => {
 
     return recipe;
   } catch (error) {
-    console.error("Error getting recipe", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to get recipe",
-    });
+    handleServiceError(error, "Failed to get recipe");
   }
 };
 
@@ -81,11 +69,7 @@ export const getUserRecipes = async (userId: string, filters: RecipeFilters = {}
     const validatedFilters = recipeFiltersSchema.parse(filters);
     return await recipeRepository.getUserRecipes(userId, validatedFilters);
   } catch (error) {
-    console.error("Error getting user recipes", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to get user recipes",
-    });
+    handleServiceError(error, "Failed to get user recipes");
   }
 };
 
@@ -94,11 +78,7 @@ export const getPublicRecipes = async (filters: RecipeFilters = {}) => {
     const validatedFilters = recipeFiltersSchema.parse(filters);
     return await recipeRepository.getPublicRecipes(validatedFilters);
   } catch (error) {
-    console.error("Error getting public recipes", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to get public recipes",
-    });
+    handleServiceError(error, "Failed to get public recipes");
   }
 };
 
@@ -122,11 +102,7 @@ export const deleteRecipe = async (id: number, userId: string) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting recipe", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to delete recipe",
-    });
+    handleServiceError(error, "Failed to delete recipe");
   }
 };
 
@@ -150,10 +126,6 @@ export const scrapeAndCreateRecipe = async (userId: string, input: ScrapeRecipeI
 
     return await createRecipe(userId, recipeData);
   } catch (error) {
-    console.error("Error scraping and creating recipe", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to scrape and create recipe",
-    });
+    handleServiceError(error, "Failed to scrape and create recipe");
   }
 };

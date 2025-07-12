@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/lib/trpc/init";
 import { createRecipeSchema, recipeFiltersSchema, scrapeRecipeSchema, updateRecipeSchema } from "../schemas";
 import * as recipeService from "./recipe-service";
 
@@ -19,7 +19,7 @@ export const recipeRouter = createTRPCRouter({
   getUserRecipes: protectedProcedure.input(recipeFiltersSchema.optional()).query(async ({ ctx, input }) => {
     return await recipeService.getUserRecipes(ctx.auth.user.id, input || {});
   }),
-  getPublicRecipes: protectedProcedure.input(recipeFiltersSchema.optional()).query(async ({ input }) => {
+  getPublicRecipes: publicProcedure.input(recipeFiltersSchema.optional()).query(async ({ input }) => {
     return await recipeService.getPublicRecipes(input || {});
   }),
   delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {

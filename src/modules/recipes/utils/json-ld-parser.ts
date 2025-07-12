@@ -43,9 +43,9 @@ export function parseNutrition(nutrition: Record<string, unknown> = {}): {
   fat: number;
 } {
   return {
-    calories: Math.round(Number.parseInt((nutrition.calories as string) || "0", 10)),
-    protein: Math.round(Number.parseInt((nutrition.proteinContent as string) || "0", 10)),
-    carbs: Math.round(Number.parseInt((nutrition.carbohydrateContent as string) || "0", 10)),
-    fat: Math.round(Number.parseInt((nutrition.fatContent as string) || "0", 10)),
+    calories: Math.round(Number.parseFloat((nutrition.calories as string) || "0")),
+    protein: Math.round(Number.parseFloat((nutrition.proteinContent as string) || "0")),
+    carbs: Math.round(Number.parseFloat((nutrition.carbohydrateContent as string) || "0")),
+    fat: Math.round(Number.parseFloat((nutrition.fatContent as string) || "0")),
   };
 }
