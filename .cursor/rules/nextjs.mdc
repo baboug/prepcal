@@ -1,7 +1,7 @@
 ---
-description: How to use Next.js
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Next.js
   

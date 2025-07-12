@@ -1,7 +1,7 @@
 ---
-description: How to use authentication and authorization using better-auth
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Auth
 

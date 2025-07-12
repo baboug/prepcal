@@ -1,7 +1,7 @@
 ---
-description: How to use Drizzle
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Drizzle Usage
 

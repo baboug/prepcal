@@ -1,7 +1,7 @@
 ---
-description: How to use data fetching and mutating using tRPC
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # tRPC
 
@@ -81,11 +81,16 @@ alwaysApply: false
 
     return (
       <div className="flex-1 pb-4 px-4 md:px-8 flex flex-col gap-y-4">
-        <MealPlansGrid data={data.items} />
-        {data.items.length === 0 && (
+        {data.items.length > 0 ? (
+          <>
+            <MealPlansGrid mealPlans={data.items} userId={session.user.id} />
+            <Pagination onPageChange={(page) => setFilters({ page })} page={filters.page} totalPages={data.totalPages} />
+          </>
+        ) : (
           <EmptyState
-            title="Create your first meal plan"
-            description="Create a meal plan to start your new fitness journey."
+            description="Try adjusting your search or filter criteria to find what you're looking for."
+            icon={<IconAppsFilled className="size-8" />}
+            title="No meal plans found"
           />
         )}
       </div>
@@ -258,144 +263,41 @@ alwaysApply: false
 - Create tRPC procedures in the following format:
 
   ```typescript
-  import { and, count, desc, eq, getTableColumns, ilike, sql } from "drizzle-orm";
-  import z from "zod";
+  import { z } from "zod";
 
-  import {
-    DEFAULT_PAGE,
-    DEFAULT_PAGE_SIZE,
-    MAX_PAGE_SIZE,
-    MIN_PAGE_SIZE,
-  } from "@/constants";
-  import { db } from "@/db";
-  import { foods } from "@/db/schema";
+  import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
   import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
-  import { TRPCError } from "@trpc/server";
-  import { foodsInsertSchema, foodsUpdateSchema } from "../schemas";
+  import { createRecipeSchema, recipeFiltersSchema, scrapeRecipeSchema, updateRecipeSchema } from "../schemas";
+  import * as recipesService from "./recipes-service";
 
-  export const foodsRouter = createTRPCRouter({
-    update: protectedProcedure
-      .input(foodsUpdateSchema)
-      .mutation(async ({ input, ctx }) => {
-        const [updatedFood] = await db
-          .update(foods)
-          .set(input)
-          .where(
-            and(eq(foods.id, input.id), eq(foods.userId, ctx.auth.user.id))
-          )
-          .returning();
-
-        if (!updatedFood) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Food not found",
-          });
+  export const recipesRouter = createTRPCRouter({
+    create: protectedProcedure.input(createRecipeSchema).mutation(async ({ ctx, input }) => {
+      return await recipesService.createRecipe(ctx.auth.user.id, input);
+    }),
+    update: protectedProcedure.input(updateRecipeSchema).mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      return await recipesService.updateRecipe(id, ctx.auth.user.id, data);
+    }),
+    getOne: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+      const userId = ctx.auth.user.id;
+      return await recipesService.getRecipe(input.id, userId);
+    }),
+    getMany: protectedProcedure.input(recipeFiltersSchema.optional()).query(async ({ ctx, input }) => {
+      return await recipesService.getRecipes(
+        ctx.auth.user.id,
+        input || {
+          page: DEFAULT_PAGE,
+          pageSize: DEFAULT_PAGE_SIZE,
+          sortBy: "default",
+          sortOrder: "desc",
         }
-
-        return updatedFood;
-      }),
-
-    remove: protectedProcedure
-      .input(z.object({ id: z.string() }))
-      .mutation(async ({ input, ctx }) => {
-        const [removedFood] = await db
-          .delete(foods)
-          .where(
-            and(eq(foods.id, input.id), eq(foods.userId, ctx.auth.user.id))
-          )
-          .returning();
-
-        if (!removedFood) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Food not found",
-          });
-        }
-
-        return removedFood;
-      }),
-
-    getOne: protectedProcedure
-      .input(z.object({ id: z.string() }))
-      .query(async ({ input, ctx }) => {
-        const [existingFood] = await db
-          .select()
-          .from(foods)
-          .where(
-            and(eq(foods.id, input.id), eq(foods.userId, ctx.auth.user.id))
-          );
-
-        if (!existingFood) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Food not found",
-          });
-        }
-
-        return existingFood;
-      }),
-
-    getMany: protectedProcedure
-      .input(
-        z.object({
-          page: z.number().default(DEFAULT_PAGE),
-          pageSize: z
-            .number()
-            .min(MIN_PAGE_SIZE)
-            .max(MAX_PAGE_SIZE)
-            .default(DEFAULT_PAGE_SIZE),
-          search: z.string().nullish(),
-        })
-      )
-      .query(async ({ ctx, input }) => {
-        const { page, pageSize, search } = input;
-
-        const data = await db
-          .select()
-          .from(foods)
-          .where(
-            and(
-              eq(foods.userId, ctx.auth.user.id),
-              search ? ilike(foods.name, `%${search}%`) : undefined
-            )
-          )
-          .orderBy(desc(foods.createdAt), desc(foods.id))
-          .limit(pageSize)
-          .offset((page - 1) * pageSize);
-
-        const [total] = await db
-          .select({ count: count() })
-          .from(foods)
-          .where(
-            and(
-              eq(foods.userId, ctx.auth.user.id),
-              search ? ilike(foods.name, `%${search}%`) : undefined
-            )
-          );
-
-        const totalPages = Math.ceil(total.count / pageSize);
-
-        return {
-          items: data,
-          total: total.count,
-          totalPages,
-        };
-      }),
-
-    create: protectedProcedure
-      .input(foodsInsertSchema)
-      .mutation(async ({ input, ctx }) => {
-        const [createdFood] = await db
-          .insert(foods)
-          .values({
-            ...input,
-            userId: ctx.auth.user.id,
-          })
-          .returning();
-
-        return createdFood;
-      }),
+      );
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+      return await recipesService.deleteRecipe(input.id, ctx.auth.user.id);
+    }),
   });
+
 
   ```
 
