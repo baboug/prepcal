@@ -87,8 +87,8 @@ export interface JsonLdRecipeInstruction {
   itemListElement?: JsonLdRecipeInstruction[];
   video?: {
     url: string;
-    duration: string;
-    thumbnailUrl: string;
+    duration?: string;
+    thumbnailUrl?: string;
   };
 }
 

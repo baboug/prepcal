@@ -141,8 +141,8 @@ export const recipe = pgTable(
           step: string;
           video?: {
             url: string;
-            duration: string;
-            thumbnailUrl: string;
+            duration?: string;
+            thumbnailUrl?: string;
           };
         }[]
       >()

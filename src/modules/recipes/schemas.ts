@@ -9,8 +9,8 @@ export const ingredientSchema = z.object({
 
 export const instructionVideoSchema = z.object({
   url: z.string().url(),
-  duration: z.string(),
-  thumbnailUrl: z.string().url(),
+  duration: z.string().optional(),
+  thumbnailUrl: z.string().url().optional(),
 });
 
 export const instructionSchema = z.object({

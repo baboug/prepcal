@@ -21,7 +21,7 @@ import { Goals } from "./form-fields/goals";
 import { PhysicalStats } from "./form-fields/physical-stats";
 
 interface ProfileFormProps {
-  profile: ProfileData;
+  profile?: ProfileData;
 }
 
 export function ProfileForm({ profile }: ProfileFormProps) {
