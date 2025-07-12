@@ -8,11 +8,11 @@ import { Separator } from "@/components/ui/separator";
 import { RecipeForm } from "./recipe-form";
 import { RecipeScrapingForm } from "./recipe-scraping-form";
 
-interface RecipeFormDialogProps {
+interface RecipeCreateDialogProps {
   children: React.ReactNode;
 }
 
-export function RecipeFormDialog({ children }: RecipeFormDialogProps) {
+export function RecipeCreateDialog({ children }: RecipeCreateDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSuccess = () => {

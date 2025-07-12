@@ -3,7 +3,7 @@
 import { PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { RecipeFormDialog } from "./recipe-form-dialog";
+import { RecipeCreateDialog } from "./recipe-create-dialog";
 import { RecipesFiltersDialog } from "./recipes-filters-dialog";
 import { RecipesSearchFilter } from "./recipes-search-filter";
 
@@ -12,12 +12,12 @@ export function RecipesViewHeader() {
     <div className="flex flex-col gap-y-4 px-4 py-4 md:px-8">
       <div className="flex items-center justify-between">
         <h1 className="font-semibold text-xl md:text-2xl">Recipes</h1>
-        <RecipeFormDialog>
+        <RecipeCreateDialog>
           <Button>
             <PlusIcon className="size-4" />
             New Recipe
           </Button>
-        </RecipeFormDialog>
+        </RecipeCreateDialog>
       </div>
       <div className="flex items-center gap-x-2">
         <RecipesSearchFilter />

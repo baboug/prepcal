@@ -1,7 +1,7 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronRightIcon, ClockIcon, CookingPotIcon, PlayIcon } from "lucide-react";
+import { ChevronRightIcon, ClockIcon, CookingPotIcon, EditIcon, PlayIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +10,11 @@ import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Session } from "@/lib/auth";
 import { useTRPC } from "@/lib/trpc/client";
 import type { RecipesGetOne } from "../../../types";
+import { RecipeDeleteDialog } from "../../components/recipe-delete-dialog";
+import { RecipeEditDialog } from "../../components/recipe-edit-dialog";
 import { IngredientItem } from "./ingredient-item";
 import { NutritionCard } from "./nutrition-card";
 import { RecipeBreadcrumb } from "./recipe-breadcrumb";
@@ -19,9 +22,10 @@ import { RecipeImage } from "./recipe-image";
 
 interface RecipeDetailViewProps {
   recipeId: number;
+  session: Session;
 }
 
-export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
+export function RecipeDetailView({ recipeId, session }: RecipeDetailViewProps) {
   const trpc = useTRPC();
   const { data: recipe } = useSuspenseQuery(trpc.recipes.getOne.queryOptions({ id: recipeId }));
 
@@ -35,6 +39,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(true);
 
   const totalTime = (recipeData.prepTime || 0) + (recipeData.cookTime || 0);
+  const canEdit = session?.user.id === recipeData.userId;
 
   return (
     <div className="w-full px-4 py-6">
@@ -48,34 +53,46 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div className="space-y-4">
-              <div>
-                <h1 className="mb-4 font-bold text-3xl">{recipeData.name}</h1>
-                {recipeData.description && (
-                  <p className="mb-6 text-lg text-muted-foreground">{recipeData.description}</p>
+              <h1 className="mb-4 font-bold text-3xl">{recipeData.name}</h1>
+              {canEdit && (
+                <div className="flex gap-2">
+                  <RecipeEditDialog recipe={recipeData}>
+                    <Button size="sm" variant="outline">
+                      <EditIcon className="mr-2 size-4" />
+                      Edit
+                    </Button>
+                  </RecipeEditDialog>
+                  <RecipeDeleteDialog recipe={recipeData} redirectOnDelete={true}>
+                    <Button size="sm" variant="outline">
+                      <TrashIcon className="mr-2 size-4" />
+                      Delete
+                    </Button>
+                  </RecipeDeleteDialog>
+                </div>
+              )}
+              {recipeData.description && <p className="text-lg text-muted-foreground">{recipeData.description}</p>}
+              <div className="lg:hidden">
+                <NutritionCard recipe={recipeData} />
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {recipeData.prepTime && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CookingPotIcon className="size-4" />
+                    <span>Prep time: {recipeData.prepTime} min</span>
+                  </div>
                 )}
-                <div className="mb-6 lg:hidden">
-                  <NutritionCard recipe={recipeData} />
-                </div>
-                <div className="mb-6 flex flex-wrap gap-4">
-                  {recipeData.prepTime && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CookingPotIcon className="size-4" />
-                      <span>Prep time: {recipeData.prepTime} min</span>
-                    </div>
-                  )}
-                  {recipeData.cookTime && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <ClockIcon className="size-4" />
-                      <span>Cook time: {recipeData.cookTime} min</span>
-                    </div>
-                  )}
-                  {totalTime > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <ClockIcon className="size-4" />
-                      <span>Total time: {totalTime} min</span>
-                    </div>
-                  )}
-                </div>
+                {recipeData.cookTime && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <ClockIcon className="size-4" />
+                    <span>Cook time: {recipeData.cookTime} min</span>
+                  </div>
+                )}
+                {totalTime > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <ClockIcon className="size-4" />
+                    <span>Total time: {totalTime} min</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="hidden md:block">

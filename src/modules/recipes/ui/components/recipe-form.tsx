@@ -15,17 +15,44 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useTRPC } from "@/lib/trpc/client";
 import { COOKING_UNITS } from "../../constants";
-import { createRecipeSchema } from "../../schemas";
+import { createRecipeSchema, type updateRecipeSchema } from "../../schemas";
+import type { RecipesGetOne } from "../../types";
 
-type FormData = z.infer<typeof createRecipeSchema>;
+type CreateFormData = z.infer<typeof createRecipeSchema>;
+type UpdateFormData = z.infer<typeof updateRecipeSchema>;
 
 interface RecipeFormProps {
   onSuccess?: () => void;
+  initialValues?: RecipesGetOne;
 }
 
-export function RecipeForm({ onSuccess }: RecipeFormProps) {
+function getDefaultValues(initialValues?: RecipesGetOne): CreateFormData {
+  return {
+    name: initialValues?.name ?? "",
+    description: initialValues?.description ?? "",
+    category: initialValues?.category ?? [],
+    cuisine: initialValues?.cuisine ?? [],
+    keywords: initialValues?.keywords ?? [],
+    ingredients: initialValues?.ingredients?.length
+      ? initialValues.ingredients
+      : [{ name: "", amount: undefined, unit: "", notes: "" }],
+    instructions: initialValues?.instructions?.length ? initialValues.instructions : [{ step: "" }],
+    prepTime: initialValues?.prepTime ?? undefined,
+    cookTime: initialValues?.cookTime ?? undefined,
+    calories: initialValues?.calories ?? undefined,
+    macros: initialValues?.macros ?? { protein: 0, carbs: 0, fat: 0 },
+    servings: initialValues?.servings ?? undefined,
+    imageUrl: initialValues?.imageUrl ?? "",
+    sourceUrl: initialValues?.sourceUrl ?? "",
+    videoUrl: initialValues?.videoUrl ?? "",
+  };
+}
+
+export function RecipeForm({ onSuccess, initialValues }: RecipeFormProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  const isEdit = !!initialValues?.id;
 
   const createRecipe = useMutation(
     trpc.recipes.create.mutationOptions({
@@ -40,25 +67,31 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
     })
   );
 
-  const form = useForm<FormData>({
+  const updateRecipe = useMutation(
+    trpc.recipes.update.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpc.recipes.getMany.queryOptions({}));
+
+        if (initialValues?.id) {
+          await queryClient.invalidateQueries(
+            trpc.recipes.getOne.queryOptions({
+              id: initialValues.id,
+            })
+          );
+        }
+
+        toast.success("Recipe updated successfully!");
+        onSuccess?.();
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    })
+  );
+
+  const form = useForm<CreateFormData>({
     resolver: zodResolver(createRecipeSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      category: [],
-      cuisine: [],
-      keywords: [],
-      ingredients: [{ name: "", amount: undefined, unit: "", notes: "" }],
-      instructions: [{ step: "" }],
-      prepTime: undefined,
-      cookTime: undefined,
-      calories: undefined,
-      macros: { protein: 0, carbs: 0, fat: 0 },
-      servings: undefined,
-      imageUrl: "",
-      sourceUrl: "",
-      videoUrl: "",
-    },
+    defaultValues: getDefaultValues(initialValues),
   });
 
   const {
@@ -79,10 +112,14 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
     name: "instructions",
   });
 
-  const isLoading = createRecipe.isPending;
+  const isLoading = createRecipe.isPending || updateRecipe.isPending;
 
-  const onSubmit = (values: FormData) => {
-    createRecipe.mutate(values);
+  const onSubmit = (values: CreateFormData) => {
+    if (isEdit && initialValues?.id) {
+      updateRecipe.mutate({ ...values, id: initialValues.id } as UpdateFormData);
+    } else {
+      createRecipe.mutate(values);
+    }
   };
 
   return (
@@ -436,7 +473,7 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
         </div>
         <div className="flex justify-end gap-2 pt-4">
           <Button disabled={isLoading} isLoading={isLoading} type="submit">
-            Create Recipe
+            {isEdit ? "Update Recipe" : "Create Recipe"}
           </Button>
         </div>
       </form>

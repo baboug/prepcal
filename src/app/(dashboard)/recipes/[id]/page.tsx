@@ -74,7 +74,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Suspense fallback={<RecipeDetailViewSkeleton />}>
         <ErrorBoundary fallback={<RecipeDetailViewError />}>
-          <RecipeDetailView recipeId={recipeId} />
+          <RecipeDetailView recipeId={recipeId} session={session} />
         </ErrorBoundary>
       </Suspense>
     </HydrationBoundary>
