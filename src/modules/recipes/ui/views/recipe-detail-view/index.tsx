@@ -3,6 +3,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ChevronRightIcon, ClockIcon, CookingPotIcon, PlayIcon } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { useState } from "react";
 
 import { ErrorState } from "@/components/error-state";
@@ -23,6 +24,10 @@ interface RecipeDetailViewProps {
 export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const trpc = useTRPC();
   const { data: recipe } = useSuspenseQuery(trpc.recipes.getOne.queryOptions({ id: recipeId }));
+
+  if (!recipe) {
+    notFound();
+  }
 
   const recipeData = recipe as NonNullable<RecipesGetOne>;
 
@@ -87,7 +92,11 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             <CollapsibleContent className="mt-4">
               <div className="space-y-4">
                 {recipeData.ingredients.map((ingredient, index) => (
-                  <IngredientItem index={index} ingredient={ingredient} key={index} />
+                  <IngredientItem
+                    index={index}
+                    ingredient={ingredient}
+                    key={ingredient.name || `ingredient-${index}`}
+                  />
                 ))}
               </div>
             </CollapsibleContent>
@@ -102,7 +111,7 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             <CollapsibleContent className="mt-4">
               <div className="space-y-4">
                 {recipeData.instructions.map((instruction, index) => (
-                  <div className="flex items-start gap-4" key={index}>
+                  <div className="flex items-start gap-4" key={instruction.step || `instruction-${index}`}>
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-sm">
                       {index + 1}
                     </div>
@@ -132,8 +141,8 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
             <div className="mt-8">
               <h3 className="mb-3 font-semibold text-lg">Tags</h3>
               <div className="flex flex-wrap gap-2">
-                {recipeData.keywords.map((keyword, index) => (
-                  <span className="rounded-full bg-muted px-3 py-1 text-sm" key={index}>
+                {recipeData.keywords.map((keyword) => (
+                  <span className="rounded-full bg-muted px-3 py-1 text-sm" key={keyword}>
                     {keyword}
                   </span>
                 ))}

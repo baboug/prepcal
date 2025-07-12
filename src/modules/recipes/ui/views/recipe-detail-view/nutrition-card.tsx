@@ -57,6 +57,24 @@ export function NutritionCard({ recipe }: NutritionCardProps) {
   );
 }
 
+const typeStyles = {
+  protein: {
+    bg: "bg-protein/10",
+    border: "border-protein",
+    text: "text-protein-foreground",
+  },
+  carbs: {
+    bg: "bg-carbs/10",
+    border: "border-carbs",
+    text: "text-carbs-foreground",
+  },
+  fat: {
+    bg: "bg-fat/10",
+    border: "border-fat",
+    text: "text-fat-foreground",
+  },
+};
+
 function NutritionCardItem({
   type,
   icon,
@@ -69,13 +87,15 @@ function NutritionCardItem({
   value: number;
   valueLabel?: string;
 }) {
+  const styles = typeStyles[type];
+
   return (
-    <div className={cn("flex items-center justify-between rounded-2xl p-3", `bg-${type}/10`, `border-${type}`)}>
+    <div className={cn("flex items-center justify-between rounded-2xl p-3", styles.bg, styles.border)}>
       <div className="flex items-center gap-3">
         {icon}
-        <span className={cn("font-medium", `text-${type}-foreground`)}>{label}</span>
+        <span className={cn("font-medium", styles.text)}>{label}</span>
       </div>
-      <span className={cn("font-bold text-lg", `text-${type}-foreground`)}>{value}g</span>
+      <span className={cn("font-bold text-lg", styles.text)}>{value}g</span>
     </div>
   );
 }

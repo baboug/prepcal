@@ -1,6 +1,6 @@
 import { CookingPotIcon, PlayIcon } from "lucide-react";
 import Image from "next/image";
-
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { RecipesGetOne } from "@/modules/recipes/types";
 
@@ -16,17 +16,11 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           <Image alt={recipe.name} className="object-cover" fill src={recipe.imageUrl} />
           {recipe.videoUrl && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Button
-                className="h-16 w-16 rounded-full bg-white/90 text-black hover:bg-white"
-                onClick={() => {
-                  if (recipe.videoUrl) {
-                    window.open(recipe.videoUrl, "_blank");
-                  }
-                }}
-                size="lg"
-              >
-                <PlayIcon className="size-8 fill-current" />
-              </Button>
+              <Link href={recipe.videoUrl} target="_blank">
+                <Button className="h-16 w-16 rounded-full bg-white/90 text-black hover:bg-white" size="lg">
+                  <PlayIcon className="size-8 fill-current" />
+                </Button>
+              </Link>
             </div>
           )}
         </div>
