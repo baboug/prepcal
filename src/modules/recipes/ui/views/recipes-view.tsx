@@ -4,21 +4,17 @@ import { IconBowlSpoonFilled } from "@tabler/icons-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { Pagination } from "@/components/pagination";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Session } from "@/lib/auth";
 import { useTRPC } from "@/lib/trpc/client";
 import { RecipeGrid } from "../components/recipe-grid";
 import { useRecipesFilters } from "../hooks/use-recipes-filters";
 
-interface RecipesViewProps {
-  session: Session;
-}
-
-export function RecipesView({ session }: RecipesViewProps) {
+export function RecipesView() {
   const trpc = useTRPC();
   const { filters, setFilters } = useRecipesFilters();
   const { data } = useSuspenseQuery(trpc.recipes.getMany.queryOptions({ ...filters }));
@@ -27,7 +23,7 @@ export function RecipesView({ session }: RecipesViewProps) {
     <div className="p-4 lg:p-6">
       {data.items.length > 0 ? (
         <>
-          <RecipeGrid recipes={data.items} userId={session.user.id} />
+          <RecipeGrid recipes={data.items} />
           <Pagination onPageChange={(page) => setFilters({ page })} page={filters.page} totalPages={data.totalPages} />
         </>
       ) : (

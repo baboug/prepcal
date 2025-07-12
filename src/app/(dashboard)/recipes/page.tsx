@@ -44,7 +44,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<RecipesViewSkeleton />}>
           <ErrorBoundary fallback={<RecipesViewError />}>
-            <RecipesView session={session} />
+            <RecipesView />
           </ErrorBoundary>
         </Suspense>
       </HydrationBoundary>
