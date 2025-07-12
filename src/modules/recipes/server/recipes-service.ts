@@ -117,7 +117,10 @@ export const scrapeAndCreateRecipe = async (userId: string, input: ScrapeRecipeI
 
     const recipeData: CreateRecipeData = {
       ...scrapedData,
-      imageUrl: scrapedData.imageUrl ?? undefined,
+      description: scrapedData.description || "",
+      imageUrl: scrapedData.imageUrl || "",
+      sourceUrl: scrapedData.sourceUrl || "",
+      videoUrl: scrapedData.videoUrl || "",
     };
 
     return await createRecipe(userId, recipeData);

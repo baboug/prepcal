@@ -27,20 +27,20 @@ export const macrosSchema = z.object({
 
 export const recipeSchema = z.object({
   name: z.string().min(1, "Recipe name is required").max(255),
-  description: z.string().optional(),
-  category: z.array(z.string()).default([]),
-  cuisine: z.array(z.string()).default([]),
-  keywords: z.array(z.string()).default([]),
+  description: z.string(),
+  category: z.array(z.string()),
+  cuisine: z.array(z.string()),
+  keywords: z.array(z.string()),
   ingredients: z.array(ingredientSchema).min(1, "At least one ingredient is required"),
   instructions: z.array(instructionSchema).min(1, "At least one instruction is required"),
   prepTime: z.number().min(0).optional(),
   cookTime: z.number().min(0).optional(),
   calories: z.number().min(0).optional(),
-  macros: macrosSchema.optional(),
+  macros: macrosSchema,
   servings: z.number().min(1).optional(),
-  imageUrl: z.string().url().optional(),
-  sourceUrl: z.string().url().optional(),
-  videoUrl: z.string().url().optional(),
+  imageUrl: z.string().refine((val) => val === "" || z.string().url().safeParse(val).success, "Invalid URL"),
+  sourceUrl: z.string().refine((val) => val === "" || z.string().url().safeParse(val).success, "Invalid URL"),
+  videoUrl: z.string().refine((val) => val === "" || z.string().url().safeParse(val).success, "Invalid URL"),
 });
 
 export const createRecipeSchema = recipeSchema;

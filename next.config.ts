@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "pinchofyum.com",
       },
+      {
+        hostname: "mealprepmanual.com",
+      },
     ],
   },
 };
