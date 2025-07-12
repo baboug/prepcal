@@ -401,7 +401,7 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
               <FormItem>
                 <FormLabel>Image URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://example.com/recipe-image.jpg" {...field} value={field.value || ""} />
+                  <Input placeholder="https://example.com/recipe-image.jpg" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -414,7 +414,7 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
               <FormItem>
                 <FormLabel>Source URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://example.com/original-recipe" {...field} value={field.value || ""} />
+                  <Input placeholder="https://example.com/original-recipe" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -427,7 +427,7 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
               <FormItem>
                 <FormLabel>Video URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value || ""} />
+                  <Input placeholder="https://youtube.com/watch?v=..." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
