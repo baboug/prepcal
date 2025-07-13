@@ -178,12 +178,107 @@ export const recipe = pgTable(
   })
 );
 
-export const recipeRelations = relations(recipe, ({ one }) => ({
+export const recipeRelations = relations(recipe, ({ one, many }) => ({
   user: one(user, {
     fields: [recipe.userId],
     references: [user.id],
     relationName: "userRecipes",
   }),
+  meals: many(meal, {
+    relationName: "mealRecipes",
+  }),
 }));
 
 export type Recipe = typeof recipe.$inferSelect;
+
+export const mealTypeEnum = pgEnum("meal_type", ["breakfast", "lunch", "dinner", "snack"]);
+
+export const mealPlan = pgTable(
+  "meal_plan",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    startDate: text("start_date").notNull(), // Store as ISO date string
+    endDate: text("end_date").notNull(), // Store as ISO date string
+    mealsPerDay: integer("meals_per_day").notNull().default(3),
+    targetCalories: real("target_calories"),
+    targetProtein: real("target_protein"),
+    targetCarbs: real("target_carbs"),
+    targetFat: real("target_fat"),
+    shoppingList: text("shopping_list"),
+    mealPrepPlan: text("meal_prep_plan"),
+    createdAt: timestamp("created_at")
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    updatedAt: timestamp("updated_at")
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("meal_plan_user_id_idx").on(table.userId),
+    startDateIdx: index("meal_plan_start_date_idx").on(table.startDate),
+    endDateIdx: index("meal_plan_end_date_idx").on(table.endDate),
+  })
+);
+
+export const meal = pgTable(
+  "meal",
+  {
+    id: serial("id").primaryKey(),
+    mealPlanId: integer("meal_plan_id")
+      .notNull()
+      .references(() => mealPlan.id, { onDelete: "cascade" }),
+    recipeId: integer("recipe_id")
+      .notNull()
+      .references(() => recipe.id, { onDelete: "cascade" }),
+    day: integer("day").notNull(), // 1-based day number (1, 2, 3, etc.)
+    mealType: mealTypeEnum("meal_type").notNull(),
+    servingSize: real("serving_size").notNull().default(1.0), // Multiplier for recipe servings
+    sortOrder: integer("sort_order").notNull().default(0), // For custom ordering within a day/meal type
+    createdAt: timestamp("created_at")
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    updatedAt: timestamp("updated_at")
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => ({
+    mealPlanIdIdx: index("meal_meal_plan_id_idx").on(table.mealPlanId),
+    dayIdx: index("meal_day_idx").on(table.day),
+    mealTypeIdx: index("meal_meal_type_idx").on(table.mealType),
+    recipeIdIdx: index("meal_recipe_id_idx").on(table.recipeId),
+  })
+);
+
+export const mealPlanRelations = relations(mealPlan, ({ one, many }) => ({
+  user: one(user, {
+    fields: [mealPlan.userId],
+    references: [user.id],
+    relationName: "userMealPlans",
+  }),
+  meals: many(meal, {
+    relationName: "mealPlanMeals",
+  }),
+}));
+
+export const mealRelations = relations(meal, ({ one }) => ({
+  mealPlan: one(mealPlan, {
+    fields: [meal.mealPlanId],
+    references: [mealPlan.id],
+    relationName: "mealPlanMeals",
+  }),
+  recipe: one(recipe, {
+    fields: [meal.recipeId],
+    references: [recipe.id],
+    relationName: "mealRecipes",
+  }),
+}));
+
+export type MealPlan = typeof mealPlan.$inferSelect;
+export type InsertMealPlan = typeof mealPlan.$inferInsert;
+export type Meal = typeof meal.$inferSelect;
+export type InsertMeal = typeof meal.$inferInsert;

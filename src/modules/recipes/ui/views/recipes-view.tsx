@@ -27,7 +27,20 @@ export function RecipesView() {
           <Pagination onPageChange={(page) => setFilters({ page })} page={filters.page} totalPages={data.totalPages} />
         </>
       ) : (
-        <RecipesViewEmpty />
+        <EmptyState
+          description="Try adjusting your search or filter criteria to find what you're looking for."
+          icon={<IconBowlSpoonFilled className="size-8" />}
+          title="No recipes found"
+        >
+          <div className="mt-6 flex gap-2">
+            <Link href="/recipes/add">
+              <Button variant="outline">
+                <PlusIcon />
+                Create Recipe
+              </Button>
+            </Link>
+          </div>
+        </EmptyState>
       )}
     </div>
   );
@@ -52,24 +65,5 @@ export function RecipesViewError() {
     <div className="p-4 lg:p-6">
       <ErrorState description="Something went wrong. Please try again later." title="Error loading recipes" />
     </div>
-  );
-}
-
-export function RecipesViewEmpty() {
-  return (
-    <EmptyState
-      description="Try adjusting your search or filter criteria to find what you're looking for."
-      icon={<IconBowlSpoonFilled className="size-8" />}
-      title="No recipes found"
-    >
-      <div className="mt-6 flex gap-2">
-        <Link href="/recipes/add">
-          <Button variant="outline">
-            <PlusIcon />
-            Create Recipe
-          </Button>
-        </Link>
-      </div>
-    </EmptyState>
   );
 }
