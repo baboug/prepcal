@@ -89,7 +89,7 @@ function RecipeMacros({ recipe }: { recipe: Recipe }) {
     <div className="grid grid-cols-3 gap-2 border-t pt-2">
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="font-medium">Protein</span>
-        <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-protein/10 p-2 font-medium text-protein-foreground">
+        <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-protein/10 p-2 font-medium text-protein-foreground dark:bg-protein/20 dark:text-protein-foreground">
           <span className="text-xs">{recipe.macros.protein}g</span>
           {macroPercentages?.protein && (
             <>
@@ -101,7 +101,7 @@ function RecipeMacros({ recipe }: { recipe: Recipe }) {
       </div>
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="font-medium">Carbs</span>
-        <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-carbs/10 p-2 font-medium text-carbs-foreground">
+        <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-carbs/10 p-2 font-medium text-carbs-foreground dark:bg-carbs/20 dark:text-carbs-foreground">
           <span className="font-medium text-xs">{recipe.macros.carbs}g</span>
           {macroPercentages?.carbs && (
             <>
@@ -113,7 +113,7 @@ function RecipeMacros({ recipe }: { recipe: Recipe }) {
       </div>
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="font-medium">Fat</span>
-        <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-fat/10 p-2 font-medium text-fat-foreground">
+        <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-fat/10 p-2 font-medium text-fat-foreground dark:bg-fat/20 dark:text-fat-foreground">
           <span className="font-medium text-xs">{recipe.macros.fat}g</span>
           {macroPercentages?.fat && (
             <>

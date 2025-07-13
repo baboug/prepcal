@@ -12,13 +12,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Session } from "@/lib/auth";
 import { useTRPC } from "@/lib/trpc/client";
-import type { RecipesGetOne } from "../../../types";
-import { RecipeDeleteDialog } from "../../components/recipe-delete-dialog";
-import { RecipeEditDialog } from "../../components/recipe-edit-dialog";
-import { IngredientItem } from "./ingredient-item";
-import { NutritionCard } from "./nutrition-card";
-import { RecipeBreadcrumb } from "./recipe-breadcrumb";
-import { RecipeImage } from "./recipe-image";
+import type { RecipesGetOne } from "../../types";
+import { RecipeDeleteDialog } from "../components/recipe-delete-dialog";
+import { IngredientItem } from "../components/recipe-detail/ingredient-item";
+import { NutritionCard } from "../components/recipe-detail/nutrition-card";
+import { RecipeBreadcrumb } from "../components/recipe-detail/recipe-breadcrumb";
+import { RecipeImage } from "../components/recipe-detail/recipe-image";
+import { RecipeEditDialog } from "../components/recipe-edit-dialog";
 
 interface RecipeDetailViewProps {
   recipeId: number;

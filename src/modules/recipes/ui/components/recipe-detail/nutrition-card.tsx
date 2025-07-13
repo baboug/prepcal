@@ -59,17 +59,17 @@ export function NutritionCard({ recipe }: NutritionCardProps) {
 
 const typeStyles = {
   protein: {
-    bg: "bg-protein/10",
+    bg: "bg-protein/20",
     border: "border-protein",
     text: "text-protein-foreground",
   },
   carbs: {
-    bg: "bg-carbs/10",
+    bg: "bg-carbs/20",
     border: "border-carbs",
     text: "text-carbs-foreground",
   },
   fat: {
-    bg: "bg-fat/10",
+    bg: "bg-fat/20",
     border: "border-fat",
     text: "text-fat-foreground",
   },
