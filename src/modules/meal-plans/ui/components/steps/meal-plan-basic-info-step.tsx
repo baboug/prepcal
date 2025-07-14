@@ -71,7 +71,11 @@ export function MealPlanBasicInfoStep({ form }: MealPlanBasicInfoStepProps) {
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-auto p-0">
                   <Calendar
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
                     initialFocus
                     mode="single"
                     onSelect={(date) => field.onChange(date?.toISOString())}
@@ -106,7 +110,10 @@ export function MealPlanBasicInfoStep({ form }: MealPlanBasicInfoStepProps) {
                   <Calendar
                     disabled={(date) => {
                       const startDate = form.getValues("startDate");
-                      return startDate ? date < new Date(startDate) : date < new Date();
+                      if (!startDate) {
+                        return true;
+                      }
+                      return date < new Date(startDate);
                     }}
                     initialFocus
                     mode="single"

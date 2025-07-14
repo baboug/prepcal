@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTRPC } from "@/lib/trpc/client";
 import { CATEGORY_OPTIONS, CUISINE_OPTIONS, SORT_OPTIONS } from "@/modules/recipes/constants";
 import type { RecipesGetMany } from "@/modules/recipes/types";
+import type { SortByOption } from "../../types";
 
 interface RecipeSelectorProps {
   onSelect: (recipeId: number, recipeData: RecipesGetMany[0]) => void;
@@ -28,9 +29,7 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
   const [category, setCategory] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [myRecipes, setMyRecipes] = useState(false);
-  const [sortBy, setSortBy] = useState<"default" | "calories" | "protein" | "carbs" | "fat" | "time" | "name">(
-    "default"
-  );
+  const [sortBy, setSortBy] = useState<SortByOption>("default");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilters, setShowFilters] = useState(false);
   const trpc = useTRPC();

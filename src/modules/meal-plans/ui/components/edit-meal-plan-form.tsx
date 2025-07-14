@@ -1,18 +1,19 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
+import { toast } from "sonner";
+import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
 import { MEAL_PLAN_STEPS } from "../../constants";
 import { type MealPlanData, MealPlanStep } from "../../types";
-import { getDaysFromNowISO, getTomorrowISO } from "../../utils/date";
 import { validateStep } from "../../utils/validation";
 import { MealPlanNutritionCard } from "./meal-plan-nutrition-card";
 import { MealPlanBasicInfoStep } from "./steps/meal-plan-basic-info-step";
@@ -20,42 +21,60 @@ import { MealPlanMealsStep } from "./steps/meal-plan-meals-step";
 import { MealPlanPreferencesStep } from "./steps/meal-plan-preferences-step";
 import { MealPlanPreviewStep } from "./steps/meal-plan-preview-step";
 
-interface MealPlanFormProps {
+interface EditMealPlanFormProps {
+  mealPlanId: number;
   onSuccess?: () => void;
 }
 
-export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
+export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<MealPlanStep>(MealPlanStep.BASIC_INFO);
   const [selectedDay, setSelectedDay] = useState<number>(1);
 
+  const { data: existingMealPlan } = useSuspenseQuery(trpc.mealPlans.getOne.queryOptions({ id: mealPlanId }));
+
+  if (!existingMealPlan) {
+    throw new Error("Meal plan not found");
+  }
+
   const form = useForm<MealPlanData>({
     mode: "onChange",
     defaultValues: {
-      name: "",
-      description: "",
-      startDate: getTomorrowISO(),
-      endDate: getDaysFromNowISO(7),
-      mealsPerDay: 3,
+      name: existingMealPlan.name,
+      description: existingMealPlan.description || "",
+      startDate: existingMealPlan.startDate,
+      endDate: existingMealPlan.endDate,
+      mealsPerDay: existingMealPlan.mealsPerDay,
       dietaryPreferences: [],
       cuisinePreferences: [],
       excludedIngredients: [],
-      meals: [],
+      meals: existingMealPlan.meals.map((meal) => ({
+        id: meal.id,
+        recipeId: meal.recipeId,
+        day: meal.day,
+        mealType: meal.mealType,
+        servingSize: meal.servingSize,
+        sortOrder: meal.sortOrder,
+        recipe: meal.recipe,
+      })),
     },
   });
 
-  const createMealPlan = useMutation(
-    trpc.mealPlans.create.mutationOptions({
+  const updateMealPlan = useMutation(
+    trpc.mealPlans.update.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.mealPlans.getMany.queryOptions({}));
+        await queryClient.invalidateQueries(trpc.mealPlans.getOne.queryOptions({ id: mealPlanId }));
+        toast.success("Meal plan updated successfully");
         router.push("/meal-plans");
         onSuccess?.();
       },
-      onError: () => {
+      onError: (error) => {
+        toast.error(error.message || "Failed to update meal plan");
         form.setError("root", {
-          message: "Failed to create meal plan. Please try again.",
+          message: "Failed to update meal plan. Please try again.",
         });
       },
     })
@@ -117,11 +136,12 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
 
   const onSubmit = async () => {
     if (isLastStep) {
-      // Final step - create the meal plan
       const formData = form.getValues();
-      createMealPlan.mutate(formData);
+      updateMealPlan.mutate({
+        id: mealPlanId,
+        ...formData,
+      });
     } else {
-      // Navigate to next step
       await handleNext();
     }
   };
@@ -156,8 +176,8 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
                   <Button disabled={isFirstStep} onClick={handlePrevious} type="button" variant="outline">
                     Previous
                   </Button>
-                  <Button disabled={createMealPlan.isPending} isLoading={createMealPlan.isPending} type="submit">
-                    {isLastStep ? "Create Meal Plan" : "Next"}
+                  <Button disabled={updateMealPlan.isPending} isLoading={updateMealPlan.isPending} type="submit">
+                    {isLastStep ? "Update Meal Plan" : "Next"}
                   </Button>
                 </div>
               </form>
@@ -173,5 +193,55 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function EditMealPlanFormSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <Skeleton className="h-2 w-full" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="lg:col-span-1">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export function EditMealPlanFormError() {
+  return (
+    <ErrorState description="We couldn't load the meal plan data. Please try again." title="Error loading meal plan" />
   );
 }

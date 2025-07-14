@@ -50,11 +50,65 @@ export async function updateMealPlan(mealPlanId: number, userId: string, data: C
     throw new Error("Meal plan not found or unauthorized");
   }
 
-  await db.delete(meal).where(eq(meal.mealPlanId, mealPlanId));
+  // Get existing meals to perform diff-based update
+  const existingMeals = await db
+    .select({
+      id: meal.id,
+      recipeId: meal.recipeId,
+      day: meal.day,
+      mealType: meal.mealType,
+      servingSize: meal.servingSize,
+      sortOrder: meal.sortOrder,
+    })
+    .from(meal)
+    .where(eq(meal.mealPlanId, mealPlanId));
 
-  if (data.meals.length > 0) {
+  // Separate meals into updates, inserts, and identify meals to delete
+  const mealsToUpdate = data.meals.filter((mealData) => mealData.id);
+  const mealsToInsert = data.meals.filter((mealData) => !mealData.id);
+  const existingMealIds = new Set(existingMeals.map((m) => m.id));
+  const updatedMealIds = new Set(mealsToUpdate.map((m) => m.id));
+  const mealsToDelete = existingMeals.filter((m) => !updatedMealIds.has(m.id));
+
+  // Delete meals that are no longer in the meal plan
+  if (mealsToDelete.length > 0) {
+    await db.delete(meal).where(
+      and(
+        eq(meal.mealPlanId, mealPlanId),
+        sql`${meal.id} IN (${sql.join(
+          mealsToDelete.map((m) => sql`${m.id}`),
+          sql`, `
+        )})`
+      )
+    );
+  }
+
+  // Update existing meals
+  if (mealsToUpdate.length > 0) {
+    const validMealsToUpdate = mealsToUpdate.filter((mealData) => mealData.id && existingMealIds.has(mealData.id));
+
+    if (validMealsToUpdate.length > 0) {
+      await Promise.all(
+        validMealsToUpdate.map((mealData) => {
+          return db
+            .update(meal)
+            .set({
+              recipeId: mealData.recipeId,
+              day: mealData.day,
+              mealType: mealData.mealType,
+              servingSize: mealData.servingSize,
+              sortOrder: mealData.sortOrder,
+            })
+            .where(and(eq(meal.id, mealData.id as number), eq(meal.mealPlanId, mealPlanId)));
+        })
+      );
+    }
+  }
+
+  // Insert new meals
+  if (mealsToInsert.length > 0) {
     await db.insert(meal).values(
-      data.meals.map((mealData) => ({
+      mealsToInsert.map((mealData) => ({
         mealPlanId: updatedMealPlan.id,
         recipeId: mealData.recipeId,
         day: mealData.day,
@@ -194,8 +248,49 @@ export async function getMealPlans(userId: string, filters: MealPlanFilters) {
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
+  // Fetch meals for each meal plan
+  const itemsWithMeals = await Promise.all(
+    items.map(async (item) => {
+      const mealsData = await db
+        .select({
+          id: meal.id,
+          day: meal.day,
+          mealType: meal.mealType,
+          servingSize: meal.servingSize,
+          sortOrder: meal.sortOrder,
+          recipe: {
+            id: recipe.id,
+            name: recipe.name,
+            calories: recipe.calories,
+            macros: recipe.macros,
+            prepTime: recipe.prepTime,
+            cookTime: recipe.cookTime,
+            servings: recipe.servings,
+            imageUrl: recipe.imageUrl,
+          },
+        })
+        .from(meal)
+        .innerJoin(recipe, eq(meal.recipeId, recipe.id))
+        .where(eq(meal.mealPlanId, item.id))
+        .orderBy(asc(meal.day), asc(meal.sortOrder));
+
+      return {
+        ...item,
+        meals: mealsData.map((m) => ({
+          id: m.id,
+          recipeId: m.recipe.id,
+          day: m.day,
+          mealType: m.mealType,
+          servingSize: m.servingSize,
+          sortOrder: m.sortOrder,
+          recipe: m.recipe,
+        })),
+      };
+    })
+  );
+
   return {
-    items,
+    items: itemsWithMeals,
     totalCount,
     totalPages,
     currentPage: page,

@@ -1,5 +1,7 @@
+import { format } from "date-fns";
+
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString();
+  return format(new Date(dateString), "yyyy-MM-dd");
 }
 
 export function getDuration(startDate: string, endDate: string): number {
@@ -15,9 +17,7 @@ export function getDayOptions(startDate: string, endDate: string) {
   }
 
   const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const totalDays = getDuration(startDate, endDate);
 
   return Array.from({ length: totalDays }, (_, i) => {
     const date = new Date(start);

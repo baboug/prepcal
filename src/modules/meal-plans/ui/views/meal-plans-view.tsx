@@ -33,7 +33,7 @@ export function MealPlansView() {
           title="No meal plans found"
         >
           <div className="mt-6 flex gap-2">
-            <Link href="/meal-plans/add">
+            <Link href="/meal-plans/new">
               <Button variant="outline">
                 <PlusIcon />
                 Create Meal Plan
@@ -48,21 +48,10 @@ export function MealPlansView() {
 
 export function MealPlansViewSkeleton() {
   return (
-    <div className="flex flex-1 flex-col gap-y-4 p-4 lg:p-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-4 w-60" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-      </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div className="space-y-3" key={i}>
-            <Skeleton className="h-48 w-full rounded-lg" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
+    <div className="p-4 lg:p-6">
+      <div className="flex flex-col gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton className="h-[230px] w-full" key={i} />
         ))}
       </div>
     </div>

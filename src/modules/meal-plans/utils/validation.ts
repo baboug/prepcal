@@ -25,6 +25,19 @@ export async function validateStep(
   formData: MealPlanData
 ): Promise<{ isValid: boolean; errors?: z.ZodError }> {
   try {
+    if (!formData) {
+      return {
+        isValid: false,
+        errors: new z.ZodError([
+          {
+            code: "custom",
+            message: "Form data is required",
+            path: [],
+          },
+        ]),
+      };
+    }
+
     switch (step) {
       case Steps.BASIC_INFO:
         await mealPlanBasicInfoStepSchema.parseAsync({
@@ -74,7 +87,16 @@ export async function validateStep(
         return { isValid: true };
 
       default:
-        return { isValid: false };
+        return {
+          isValid: false,
+          errors: new z.ZodError([
+            {
+              code: "custom",
+              message: `Unknown validation step: ${step}`,
+              path: [],
+            },
+          ]),
+        };
     }
   } catch (error) {
     if (error instanceof z.ZodError) {

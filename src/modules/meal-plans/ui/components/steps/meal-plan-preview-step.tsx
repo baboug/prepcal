@@ -59,24 +59,23 @@ export function MealPlanPreviewStep({ form }: MealPlanPreviewStepProps) {
               <span>{formData.mealsPerDay} meals/day</span>
             </div>
           </div>
-          {(formData.dietaryPreferences?.length ?? 0) > 0 ||
-            ((formData.cuisinePreferences?.length ?? 0) > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-muted-foreground text-sm">Preferences</h4>
-                <div className="flex flex-wrap gap-2">
-                  {formData.dietaryPreferences?.map((pref) => (
-                    <Badge key={pref} variant="secondary">
-                      {pref}
-                    </Badge>
-                  ))}
-                  {formData.cuisinePreferences?.map((cuisine) => (
-                    <Badge key={cuisine} variant="outline">
-                      {cuisine}
-                    </Badge>
-                  ))}
-                </div>
+          {((formData.dietaryPreferences?.length ?? 0) > 0 || (formData.cuisinePreferences?.length ?? 0) > 0) && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-muted-foreground text-sm">Preferences</h4>
+              <div className="flex flex-wrap gap-2">
+                {formData.dietaryPreferences?.map((pref) => (
+                  <Badge key={pref} variant="secondary">
+                    {pref}
+                  </Badge>
+                ))}
+                {formData.cuisinePreferences?.map((cuisine) => (
+                  <Badge key={cuisine} variant="outline">
+                    {cuisine}
+                  </Badge>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
           {!!formData.excludedIngredients?.length && formData.excludedIngredients.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-muted-foreground text-sm">Excluded Ingredients</h4>

@@ -6,13 +6,11 @@ import { forwardRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormControl, FormDescription, FormItem, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { RecipesGetMany } from "@/modules/recipes/types";
 import { MEAL_TYPES } from "../../constants";
 import type { MealData } from "../../types";
+import { MealCardEditForm } from "./meal-card-edit-form";
 
 interface MealCardProps {
   meal: MealData & { recipe?: RecipesGetMany[0] };
@@ -59,9 +57,10 @@ export const MealCard = forwardRef<HTMLDivElement, MealCardProps>(
             <div className="flex flex-1 items-start gap-3">
               {isDraggable && (
                 <button
-                  className={`mt-1 text-muted-foreground ${
+                  className={cn(
+                    "mt-1 text-muted-foreground",
                     isEditable ? "cursor-grab hover:text-foreground active:cursor-grabbing" : "text-muted-foreground/50"
-                  }`}
+                  )}
                   {...(isEditable ? dragHandleProps : {})}
                 >
                   <GripVerticalIcon className="h-4 w-4" />
@@ -149,49 +148,7 @@ export const MealCard = forwardRef<HTMLDivElement, MealCardProps>(
         </CardHeader>
         {isEditable && onUpdate && (
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormItem>
-                <FormLabel>Meal Type</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    onUpdate(index, { mealType: value as MealData["mealType"] });
-                  }}
-                  value={meal.mealType}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {MEAL_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-              <FormItem>
-                <FormLabel>Serving Size</FormLabel>
-                <FormControl>
-                  <Input
-                    max="10"
-                    min="0.1"
-                    onChange={(e) => {
-                      const value = Number.parseFloat(e.target.value);
-                      if (!Number.isNaN(value)) {
-                        onUpdate(index, { servingSize: value });
-                      }
-                    }}
-                    step="0.1"
-                    type="number"
-                    value={meal.servingSize}
-                  />
-                </FormControl>
-                <FormDescription>Multiplier for recipe portions</FormDescription>
-              </FormItem>
-            </div>
+            <MealCardEditForm index={index} meal={meal} onUpdate={onUpdate} />
           </CardContent>
         )}
       </Card>

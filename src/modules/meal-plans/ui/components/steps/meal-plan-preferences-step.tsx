@@ -45,8 +45,9 @@ export function MealPlanPreferencesStep({ form }: MealPlanPreferencesStepProps) 
   };
 
   const addExcludedIngredient = (ingredient: string) => {
-    if (ingredient.trim() && !watchedExcludedIngredients.includes(ingredient.trim())) {
-      form.setValue("excludedIngredients", [...watchedExcludedIngredients, ingredient.trim()]);
+    const trimmedIngredient = ingredient.trim();
+    if (trimmedIngredient.length > 0 && !watchedExcludedIngredients.includes(trimmedIngredient)) {
+      form.setValue("excludedIngredients", [...watchedExcludedIngredients, trimmedIngredient]);
     }
   };
 

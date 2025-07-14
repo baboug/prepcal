@@ -93,3 +93,5 @@ export interface DayMeals {
   totalCarbs: number;
   totalFat: number;
 }
+
+export type SortByOption = "default" | "calories" | "protein" | "carbs" | "fat" | "time" | "name";
