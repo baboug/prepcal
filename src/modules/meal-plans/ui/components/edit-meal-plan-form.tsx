@@ -35,22 +35,18 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
 
   const { data: existingMealPlan } = useSuspenseQuery(trpc.mealPlans.getOne.queryOptions({ id: mealPlanId }));
 
-  if (!existingMealPlan) {
-    throw new Error("Meal plan not found");
-  }
-
   const form = useForm<MealPlanData>({
     mode: "onChange",
     defaultValues: {
-      name: existingMealPlan.name,
-      description: existingMealPlan.description || "",
-      startDate: existingMealPlan.startDate,
-      endDate: existingMealPlan.endDate,
-      mealsPerDay: existingMealPlan.mealsPerDay,
+      name: existingMealPlan?.name || "",
+      description: existingMealPlan?.description || "",
+      startDate: existingMealPlan?.startDate || "",
+      endDate: existingMealPlan?.endDate || "",
+      mealsPerDay: existingMealPlan?.mealsPerDay || 0,
       dietaryPreferences: [],
       cuisinePreferences: [],
       excludedIngredients: [],
-      meals: existingMealPlan.meals.map((meal) => ({
+      meals: existingMealPlan?.meals.map((meal) => ({
         id: meal.id,
         recipeId: meal.recipeId,
         day: meal.day,
@@ -91,9 +87,10 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
 
     if (!isValid && errors) {
       for (const issue of errors.issues) {
-        const fieldPath = issue.path.join(".");
-        if (fieldPath in form.getValues()) {
-          form.setError(fieldPath as keyof MealPlanData, { message: issue.message });
+        const fieldPath = issue.path.join(".") as keyof MealPlanData;
+        const formValues = form.getValues();
+        if (fieldPath in formValues && typeof fieldPath === "string") {
+          form.setError(fieldPath, { message: issue.message });
         }
       }
     }
@@ -145,6 +142,10 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
       await handleNext();
     }
   };
+
+  if (!existingMealPlan) {
+    return <ErrorState description="Meal plan not found" title="Meal plan not found" />;
+  }
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -33,7 +33,7 @@ export default async function MealPlanDetailPage({ params }: MealPlanDetailPageP
   }
 
   if (!session.user.onboardingComplete) {
-    return redirect("/onboarding");
+    redirect("/onboarding");
   }
 
   const queryClient = getQueryClient();

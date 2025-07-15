@@ -1,8 +1,18 @@
-import { and, asc, desc, eq, gte, ilike, lte, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lte, or, type SQL, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { meal, mealPlan, recipe } from "@/lib/db/schema";
-import type { CreateMealPlanData, MealPlanFilters } from "../types";
+import type { CreateMealPlanData, MealPlanFilters, MealWithRecipeRepository, ProcessedMealWithRecipe } from "../types";
+
+export async function getUserMealPlan(mealPlanId: number, userId: string) {
+  const [foundMealPlan] = await db
+    .select()
+    .from(mealPlan)
+    .where(and(eq(mealPlan.id, mealPlanId), eq(mealPlan.userId, userId)))
+    .limit(1);
+
+  return foundMealPlan || null;
+}
 
 export async function createMealPlan(userId: string, data: CreateMealPlanData) {
   const [createdMealPlan] = await db
@@ -75,10 +85,10 @@ export async function updateMealPlan(mealPlanId: number, userId: string, data: C
     await db.delete(meal).where(
       and(
         eq(meal.mealPlanId, mealPlanId),
-        sql`${meal.id} IN (${sql.join(
-          mealsToDelete.map((m) => sql`${m.id}`),
-          sql`, `
-        )})`
+        inArray(
+          meal.id,
+          mealsToDelete.map((m) => m.id)
+        )
       )
     );
   }
@@ -88,20 +98,24 @@ export async function updateMealPlan(mealPlanId: number, userId: string, data: C
     const validMealsToUpdate = mealsToUpdate.filter((mealData) => mealData.id && existingMealIds.has(mealData.id));
 
     if (validMealsToUpdate.length > 0) {
-      await Promise.all(
-        validMealsToUpdate.map((mealData) => {
-          return db
-            .update(meal)
-            .set({
-              recipeId: mealData.recipeId,
-              day: mealData.day,
-              mealType: mealData.mealType,
-              servingSize: mealData.servingSize,
-              sortOrder: mealData.sortOrder,
-            })
-            .where(and(eq(meal.id, mealData.id as number), eq(meal.mealPlanId, mealPlanId)));
-        })
-      );
+      // Use batch update with VALUES clause for efficiency
+      const valuesClause = validMealsToUpdate
+        .map((m) => `(${m.id}, ${m.recipeId}, ${m.day}, '${m.mealType}', ${m.servingSize}, ${m.sortOrder})`)
+        .join(", ");
+
+      const updateQuery = sql`
+        UPDATE meal 
+        SET 
+          recipe_id = batch_data.recipe_id::integer,
+          day = batch_data.day::integer,
+          meal_type = batch_data.meal_type::meal_type,
+          serving_size = batch_data.serving_size::numeric,
+          sort_order = batch_data.sort_order::integer
+        FROM (VALUES ${sql.raw(valuesClause)}) AS batch_data(id, recipe_id, day, meal_type, serving_size, sort_order)
+        WHERE meal.id = batch_data.id::integer AND meal.meal_plan_id = ${mealPlanId}
+      `;
+
+      await db.execute(updateQuery);
     }
   }
 
@@ -145,7 +159,7 @@ export async function getMealPlan(mealPlanId: number, userId: string) {
     .limit(1);
 
   if (!mealPlanData || mealPlanData.length === 0) {
-    throw new Error("Meal plan not found");
+    return null;
   }
 
   const mealsData = await db
@@ -248,46 +262,61 @@ export async function getMealPlans(userId: string, filters: MealPlanFilters) {
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  // Fetch meals for each meal plan
-  const itemsWithMeals = await Promise.all(
-    items.map(async (item) => {
-      const mealsData = await db
-        .select({
-          id: meal.id,
-          day: meal.day,
-          mealType: meal.mealType,
-          servingSize: meal.servingSize,
-          sortOrder: meal.sortOrder,
-          recipe: {
-            id: recipe.id,
-            name: recipe.name,
-            calories: recipe.calories,
-            macros: recipe.macros,
-            prepTime: recipe.prepTime,
-            cookTime: recipe.cookTime,
-            servings: recipe.servings,
-            imageUrl: recipe.imageUrl,
-          },
-        })
-        .from(meal)
-        .innerJoin(recipe, eq(meal.recipeId, recipe.id))
-        .where(eq(meal.mealPlanId, item.id))
-        .orderBy(asc(meal.day), asc(meal.sortOrder));
+  // Fetch all meals for all meal plans in a single query
+  const mealPlanIds = items.map((item) => item.id);
 
-      return {
-        ...item,
-        meals: mealsData.map((m) => ({
-          id: m.id,
-          recipeId: m.recipe.id,
-          day: m.day,
-          mealType: m.mealType,
-          servingSize: m.servingSize,
-          sortOrder: m.sortOrder,
-          recipe: m.recipe,
-        })),
-      };
-    })
+  let allMealsData: MealWithRecipeRepository[] = [];
+  if (mealPlanIds.length > 0) {
+    allMealsData = await db
+      .select({
+        mealPlanId: meal.mealPlanId,
+        id: meal.id,
+        day: meal.day,
+        mealType: meal.mealType,
+        servingSize: meal.servingSize,
+        sortOrder: meal.sortOrder,
+        recipe: {
+          id: recipe.id,
+          name: recipe.name,
+          calories: recipe.calories,
+          macros: recipe.macros,
+          prepTime: recipe.prepTime,
+          cookTime: recipe.cookTime,
+          servings: recipe.servings,
+          imageUrl: recipe.imageUrl,
+        },
+      })
+      .from(meal)
+      .innerJoin(recipe, eq(meal.recipeId, recipe.id))
+      .where(inArray(meal.mealPlanId, mealPlanIds))
+      .orderBy(asc(meal.day), asc(meal.sortOrder));
+  }
+
+  // Group meals by meal plan ID
+  const mealsByMealPlanId = allMealsData.reduce(
+    (acc, mealData) => {
+      if (!acc[mealData.mealPlanId]) {
+        acc[mealData.mealPlanId] = [];
+      }
+      acc[mealData.mealPlanId].push({
+        id: mealData.id,
+        recipeId: mealData.recipe.id,
+        day: mealData.day,
+        mealType: mealData.mealType,
+        servingSize: mealData.servingSize,
+        sortOrder: mealData.sortOrder,
+        recipe: mealData.recipe,
+      });
+      return acc;
+    },
+    {} as Record<number, ProcessedMealWithRecipe[]>
   );
+
+  // Map meals back to their respective meal plans
+  const itemsWithMeals = items.map((item) => ({
+    ...item,
+    meals: mealsByMealPlanId[item.id] || [],
+  }));
 
   return {
     items: itemsWithMeals,

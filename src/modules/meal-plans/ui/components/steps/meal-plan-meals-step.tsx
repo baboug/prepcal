@@ -50,7 +50,7 @@ interface SortableMealItemProps {
 
 function SortableMealItem({ meal, index, onUpdate, onRemove }: SortableMealItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `meal-${meal.day}-${meal.sortOrder}-${meal.recipeId}`,
+    id: `meal-${meal.recipeId}-${index}`,
   });
 
   const style = {

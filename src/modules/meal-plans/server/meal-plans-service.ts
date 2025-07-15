@@ -15,6 +15,14 @@ export async function createMealPlan(userId: string, data: CreateMealPlanData) {
 
 export async function updateMealPlan(mealPlanId: number, userId: string, data: CreateMealPlanData) {
   try {
+    const existingMealPlan = await mealPlansRepository.getUserMealPlan(mealPlanId, userId);
+    if (!existingMealPlan) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Meal plan not found or you don't have permission to edit it",
+      });
+    }
+
     return await mealPlansRepository.updateMealPlan(mealPlanId, userId, data);
   } catch (error) {
     handleServiceError(error, "Failed to update meal plan");
@@ -23,7 +31,16 @@ export async function updateMealPlan(mealPlanId: number, userId: string, data: C
 
 export async function getMealPlan(mealPlanId: number, userId: string) {
   try {
-    return await mealPlansRepository.getMealPlan(mealPlanId, userId);
+    const mealPlan = await mealPlansRepository.getMealPlan(mealPlanId, userId);
+
+    if (!mealPlan) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Meal plan not found or you don't have permission to view it",
+      });
+    }
+
+    return mealPlan;
   } catch (error) {
     handleServiceError(error, "Failed to get meal plan");
   }
@@ -36,7 +53,23 @@ export async function getMealPlans(userId: string, filters: MealPlanFilters) {
 
 export async function deleteMealPlan(mealPlanId: number, userId: string) {
   try {
-    return await mealPlansRepository.deleteMealPlan(mealPlanId, userId);
+    const existingMealPlan = await mealPlansRepository.getUserMealPlan(mealPlanId, userId);
+    if (!existingMealPlan) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Meal plan not found or you don't have permission to delete it",
+      });
+    }
+
+    const deleted = await mealPlansRepository.deleteMealPlan(mealPlanId, userId);
+    if (!deleted) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to delete meal plan",
+      });
+    }
+
+    return { success: true };
   } catch (error) {
     handleServiceError(error, "Failed to delete meal plan");
   }
@@ -44,6 +77,14 @@ export async function deleteMealPlan(mealPlanId: number, userId: string) {
 
 export async function updateShoppingList(mealPlanId: number, userId: string, shoppingList: string) {
   try {
+    const existingMealPlan = await mealPlansRepository.getUserMealPlan(mealPlanId, userId);
+    if (!existingMealPlan) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Meal plan not found or you don't have permission to update it",
+      });
+    }
+
     return await mealPlansRepository.updateMealPlanShoppingList(mealPlanId, userId, shoppingList);
   } catch (error) {
     handleServiceError(error, "Failed to update shopping list");
@@ -52,6 +93,14 @@ export async function updateShoppingList(mealPlanId: number, userId: string, sho
 
 export async function updateMealPrepPlan(mealPlanId: number, userId: string, mealPrepPlan: string) {
   try {
+    const existingMealPlan = await mealPlansRepository.getUserMealPlan(mealPlanId, userId);
+    if (!existingMealPlan) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Meal plan not found or you don't have permission to update it",
+      });
+    }
+
     return await mealPlansRepository.updateMealPlanMealPrep(mealPlanId, userId, mealPrepPlan);
   } catch (error) {
     handleServiceError(error, "Failed to update meal prep plan");

@@ -90,12 +90,14 @@ export function MealPlanCard({ mealPlan }: MealPlanCardProps) {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <CardTitle className="line-clamp-1 text-lg transition-colors hover:text-primary">
-                  {mealPlan.name}{" "}
-                  <Badge className="ml-2 p-1" variant={isActive ? "default" : "secondary"}>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="line-clamp-1 text-lg transition-colors hover:text-primary">
+                    {mealPlan.name}
+                  </CardTitle>
+                  <Badge className="flex-shrink-0" variant={isActive ? "default" : "secondary"}>
                     {isActive ? "Active" : "Archived"}
                   </Badge>
-                </CardTitle>
+                </div>
                 {mealPlan.description && (
                   <CardDescription className="mt-1 line-clamp-2 transition-colors hover:text-foreground">
                     {mealPlan.description}

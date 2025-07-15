@@ -33,7 +33,7 @@ export default async function EditMealPlanPage({ params }: EditMealPlanPageProps
   }
 
   if (!session.user.onboardingComplete) {
-    return redirect("/onboarding");
+    redirect("/onboarding");
   }
 
   const queryClient = getQueryClient();

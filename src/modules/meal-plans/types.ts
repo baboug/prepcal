@@ -95,3 +95,51 @@ export interface DayMeals {
 }
 
 export type SortByOption = "default" | "calories" | "protein" | "carbs" | "fat" | "time" | "name";
+
+// Repository-specific type for database queries with meal plan ID
+export type MealWithRecipeRepository = {
+  mealPlanId: number;
+  id: number;
+  day: number;
+  mealType: string;
+  servingSize: number;
+  sortOrder: number;
+  recipe: {
+    id: number;
+    name: string;
+    calories: number | null;
+    macros: {
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+    prepTime: number | null;
+    cookTime: number | null;
+    servings: number | null;
+    imageUrl: string | null;
+  };
+};
+
+// Processed meal type for client consumption
+export type ProcessedMealWithRecipe = {
+  id: number;
+  recipeId: number;
+  day: number;
+  mealType: string;
+  servingSize: number;
+  sortOrder: number;
+  recipe: {
+    id: number;
+    name: string;
+    calories: number | null;
+    macros: {
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+    prepTime: number | null;
+    cookTime: number | null;
+    servings: number | null;
+    imageUrl: string | null;
+  };
+};
