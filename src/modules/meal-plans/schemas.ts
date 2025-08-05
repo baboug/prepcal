@@ -98,9 +98,9 @@ export const generateMealPlanSchema = z.object({
   maxPrepTime: z.number().min(0).max(180).optional(),
   maxCookTime: z.number().min(0).max(240).optional(),
   nutritionTargets: z.object({
-    calories: z.number(),
-    protein: z.number(),
-    carbs: z.number(),
-    fat: z.number(),
+    calories: z.number().min(0, "Calories must be non-negative").max(10_000, "Calories cannot exceed 10,000"),
+    protein: z.number().min(0, "Protein must be non-negative").max(500, "Protein cannot exceed 500g"),
+    carbs: z.number().min(0, "Carbs must be non-negative").max(1000, "Carbs cannot exceed 1,000g"),
+    fat: z.number().min(0, "Fat must be non-negative").max(500, "Fat cannot exceed 500g"),
   }),
 });

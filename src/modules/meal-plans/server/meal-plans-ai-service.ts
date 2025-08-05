@@ -3,8 +3,10 @@ import { TRPCError } from "@trpc/server";
 import { generateObject } from "ai";
 import { and, or, type SQL, sql } from "drizzle-orm";
 import { z } from "zod";
+
 import { db } from "@/lib/db";
 import { recipe } from "@/lib/db/schema";
+import { handleServiceError } from "@/lib/trpc/utils";
 import type { RecipesGetMany } from "@/modules/recipes/types";
 import type { MealData } from "../types";
 
@@ -134,10 +136,10 @@ export async function generateMealPlan(
       };
     });
   } catch (error) {
-    console.error("AI meal plan generation failed:", error);
+    handleServiceError(error, "Failed to generate meal plan");
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to generate meal plan. Please try again.",
+      message: "Failed to generate meal plan",
     });
   }
 }

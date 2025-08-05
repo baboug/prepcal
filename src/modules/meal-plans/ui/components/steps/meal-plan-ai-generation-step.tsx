@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRightIcon, SparklesIcon } from "lucide-react";
-import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -20,7 +19,6 @@ interface MealPlanAiGenerationStepProps {
 
 export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlanAiGenerationStepProps) {
   const trpc = useTRPC();
-  const [isGenerating, setIsGenerating] = useState(false);
   const { data: userProfile } = useQuery(trpc.profile.get.queryOptions());
 
   const generateMeals = useMutation(
@@ -33,7 +31,6 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
         audio.play().catch((error) => {
           console.error("Failed to play audio", error);
         });
-        setIsGenerating(false);
 
         setTimeout(() => {
           onSuccess?.();
@@ -41,7 +38,6 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
       },
       onError: (error) => {
         toast.error(error.message || "Failed to generate meal plan. Please try again.");
-        setIsGenerating(false);
       },
     })
   );
@@ -76,7 +72,6 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
       },
     };
 
-    setIsGenerating(true);
     generateMeals.mutate(generateRequest);
   };
 
@@ -84,7 +79,7 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
   const startDate = formData.startDate ? new Date(formData.startDate) : undefined;
   const endDate = formData.endDate ? new Date(formData.endDate) : undefined;
 
-  if (isGenerating) {
+  if (generateMeals.isPending) {
     return <MealPlanLoadingScreen endDate={endDate} mealsPerDay={formData.mealsPerDay} startDate={startDate} />;
   }
 

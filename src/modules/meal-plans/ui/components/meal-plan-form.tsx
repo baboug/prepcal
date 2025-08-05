@@ -16,15 +16,6 @@ import { getDaysFromNowISO, getTomorrowISO } from "../../utils/date";
 import { validateStep } from "../../utils/validation";
 import { MealPlanNutritionCard } from "./meal-plan-nutrition-card";
 
-interface RecipeFilters {
-  search: string;
-  category: string;
-  cuisine: string;
-  myRecipes: boolean;
-  sortBy: SortByOption;
-  sortOrder: "asc" | "desc";
-}
-
 import { MealPlanAiGenerationStep } from "./steps/meal-plan-ai-generation-step";
 import { MealPlanBasicInfoStep } from "./steps/meal-plan-basic-info-step";
 import { MealPlanMealsStep } from "./steps/meal-plan-meals-step";
@@ -33,6 +24,15 @@ import { MealPlanPreviewStep } from "./steps/meal-plan-preview-step";
 
 interface MealPlanFormProps {
   onSuccess?: () => void;
+}
+
+interface RecipeFilters {
+  search: string;
+  category: string;
+  cuisine: string;
+  myRecipes: boolean;
+  sortBy: SortByOption;
+  sortOrder: "asc" | "desc";
 }
 
 export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
@@ -147,13 +147,20 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
     }
   };
 
+  const handleAiStepCompletion = () => {
+    const nextStep = getNextStep(currentStep);
+
+    if (nextStep) {
+      setCurrentStep(nextStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const onSubmit = async () => {
     if (isLastStep) {
-      // Final step - create the meal plan
       const formData = form.getValues();
       createMealPlan.mutate(formData);
     } else {
-      // Navigate to next step
       await handleNext();
     }
   };
@@ -193,20 +200,8 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
                 {currentStep === MealPlanStep.AI_GENERATION && (
                   <MealPlanAiGenerationStep
                     form={form}
-                    onSkipAI={() => {
-                      const nextStep = getNextStep(currentStep);
-                      if (nextStep) {
-                        setCurrentStep(nextStep);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
-                    onSuccess={() => {
-                      const nextStep = getNextStep(currentStep);
-                      if (nextStep) {
-                        setCurrentStep(nextStep);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
+                    onSkipAI={handleAiStepCompletion}
+                    onSuccess={handleAiStepCompletion}
                   />
                 )}
                 {currentStep === MealPlanStep.PREVIEW && <MealPlanPreviewStep form={form} />}
