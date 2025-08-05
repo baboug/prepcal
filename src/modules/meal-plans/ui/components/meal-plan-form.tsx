@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,10 +11,21 @@ import { Form } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
 import { useTRPC } from "@/lib/trpc/client";
 import { MEAL_PLAN_STEPS } from "../../constants";
-import { type MealPlanData, MealPlanStep } from "../../types";
+import { type MealPlanData, MealPlanStep, type SortByOption } from "../../types";
 import { getDaysFromNowISO, getTomorrowISO } from "../../utils/date";
 import { validateStep } from "../../utils/validation";
 import { MealPlanNutritionCard } from "./meal-plan-nutrition-card";
+
+interface RecipeFilters {
+  search: string;
+  category: string;
+  cuisine: string;
+  myRecipes: boolean;
+  sortBy: SortByOption;
+  sortOrder: "asc" | "desc";
+}
+
+import { MealPlanAiGenerationStep } from "./steps/meal-plan-ai-generation-step";
 import { MealPlanBasicInfoStep } from "./steps/meal-plan-basic-info-step";
 import { MealPlanMealsStep } from "./steps/meal-plan-meals-step";
 import { MealPlanPreferencesStep } from "./steps/meal-plan-preferences-step";
@@ -30,6 +41,27 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<MealPlanStep>(MealPlanStep.BASIC_INFO);
   const [selectedDay, setSelectedDay] = useState<number>(1);
+  const [recipeFilters, setRecipeFilters] = useState<RecipeFilters>({
+    search: "",
+    category: "",
+    cuisine: "",
+    myRecipes: false,
+    sortBy: "default",
+    sortOrder: "desc",
+  });
+
+  const { data: recipesData } = useQuery(
+    trpc.recipes.getMany.queryOptions({
+      search: recipeFilters.search,
+      category: recipeFilters.category,
+      cuisine: recipeFilters.cuisine,
+      myRecipes: recipeFilters.myRecipes,
+      sortBy: recipeFilters.sortBy,
+      sortOrder: recipeFilters.sortOrder,
+      page: 1,
+      pageSize: 100,
+    })
+  );
 
   const form = useForm<MealPlanData>({
     mode: "onChange",
@@ -149,7 +181,33 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
                 {currentStep === MealPlanStep.BASIC_INFO && <MealPlanBasicInfoStep form={form} />}
                 {currentStep === MealPlanStep.PREFERENCES && <MealPlanPreferencesStep form={form} />}
                 {currentStep === MealPlanStep.MEALS && (
-                  <MealPlanMealsStep form={form} onSelectedDayChange={setSelectedDay} selectedDay={selectedDay} />
+                  <MealPlanMealsStep
+                    form={form}
+                    onRecipeFiltersChange={setRecipeFilters}
+                    onSelectedDayChange={setSelectedDay}
+                    recipeFilters={recipeFilters}
+                    recipes={recipesData?.items || []}
+                    selectedDay={selectedDay}
+                  />
+                )}
+                {currentStep === MealPlanStep.AI_GENERATION && (
+                  <MealPlanAiGenerationStep
+                    form={form}
+                    onSkipAI={() => {
+                      const nextStep = getNextStep(currentStep);
+                      if (nextStep) {
+                        setCurrentStep(nextStep);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                    onSuccess={() => {
+                      const nextStep = getNextStep(currentStep);
+                      if (nextStep) {
+                        setCurrentStep(nextStep);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                  />
                 )}
                 {currentStep === MealPlanStep.PREVIEW && <MealPlanPreviewStep form={form} />}
                 <div className="flex justify-between pt-6">

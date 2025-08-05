@@ -31,6 +31,7 @@ export type MealPlanMealsStepData = z.infer<typeof mealPlanMealsStepSchema>;
 export const MealPlanStep = {
   BASIC_INFO: "basic-info",
   PREFERENCES: "preferences",
+  AI_GENERATION: "ai-generation",
   MEALS: "meals",
   PREVIEW: "preview",
 } as const;

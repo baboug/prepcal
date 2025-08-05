@@ -1,4 +1,3 @@
-import { StagewiseToolbar } from "@stagewise/toolbar-next";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
@@ -26,7 +25,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${plusJakartaSans.variable} antialiased`}>
-        <StagewiseToolbar config={{ plugins: [] }} />
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -83,3 +83,24 @@ export const mealPlanFormSchema = mealPlanFormBaseSchema.refine(
     path: ["endDate"],
   }
 );
+
+export const generateMealPlanSchema = z.object({
+  startDate: z.string().datetime("Invalid start date"),
+  endDate: z.string().datetime("Invalid end date"),
+  mealsPerDay: z
+    .number()
+    .min(1, "Must have at least 1 meal per day")
+    .max(6, "Cannot exceed 6 meals per day")
+    .default(3),
+  dietaryPreferences: z.array(z.string()).optional(),
+  cuisinePreferences: z.array(z.string()).optional(),
+  excludedIngredients: z.array(z.string()).optional(),
+  maxPrepTime: z.number().min(0).max(180).optional(),
+  maxCookTime: z.number().min(0).max(240).optional(),
+  nutritionTargets: z.object({
+    calories: z.number(),
+    protein: z.number(),
+    carbs: z.number(),
+    fat: z.number(),
+  }),
+});

@@ -1,9 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { FilterIcon, SearchIcon, XIcon } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTRPC } from "@/lib/trpc/client";
 import { CATEGORY_OPTIONS, CUISINE_OPTIONS, SORT_OPTIONS } from "@/modules/recipes/constants";
 import type { RecipesGetMany } from "@/modules/recipes/types";
 import type { SortByOption } from "../../types";
@@ -22,51 +19,62 @@ import type { SortByOption } from "../../types";
 interface RecipeSelectorProps {
   onSelect: (recipeId: number, recipeData: RecipesGetMany[0]) => void;
   onClose: () => void;
+  recipes: RecipesGetMany;
+  recipeFilters: {
+    search: string;
+    category: string;
+    cuisine: string;
+    myRecipes: boolean;
+    sortBy: SortByOption;
+    sortOrder: "asc" | "desc";
+  };
+  onRecipeFiltersChange: (filters: {
+    search: string;
+    category: string;
+    cuisine: string;
+    myRecipes: boolean;
+    sortBy: SortByOption;
+    sortOrder: "asc" | "desc";
+  }) => void;
 }
 
-export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [cuisine, setCuisine] = useState("");
-  const [myRecipes, setMyRecipes] = useState(false);
-  const [sortBy, setSortBy] = useState<SortByOption>("default");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [showFilters, setShowFilters] = useState(false);
-  const trpc = useTRPC();
-
-  const { data } = useQuery(
-    trpc.recipes.getMany.queryOptions({
-      search,
-      category,
-      cuisine,
-      myRecipes,
-      sortBy,
-      sortOrder,
-      page: 1,
-      pageSize: 50,
-    })
-  );
+export function RecipeSelector({
+  onSelect,
+  onClose,
+  recipes,
+  recipeFilters,
+  onRecipeFiltersChange,
+}: RecipeSelectorProps) {
+  const showFilters =
+    recipeFilters.search !== "" ||
+    recipeFilters.category !== "" ||
+    recipeFilters.cuisine !== "" ||
+    recipeFilters.myRecipes ||
+    recipeFilters.sortBy !== "default" ||
+    recipeFilters.sortOrder !== "desc";
 
   const handleSelect = (recipe: RecipesGetMany[0]) => {
     onSelect(recipe.id, recipe);
   };
 
   const clearFilters = () => {
-    setSearch("");
-    setCategory("");
-    setCuisine("");
-    setMyRecipes(false);
-    setSortBy("default");
-    setSortOrder("desc");
+    onRecipeFiltersChange({
+      search: "",
+      category: "",
+      cuisine: "",
+      myRecipes: false,
+      sortBy: "default",
+      sortOrder: "desc",
+    });
   };
 
   const activeFiltersCount = [
-    !!search,
-    !!category,
-    !!cuisine,
-    myRecipes,
-    sortBy !== "default",
-    sortOrder !== "desc",
+    !!recipeFilters.search,
+    !!recipeFilters.category,
+    !!recipeFilters.cuisine,
+    recipeFilters.myRecipes,
+    recipeFilters.sortBy !== "default",
+    recipeFilters.sortOrder !== "desc",
   ].filter(Boolean).length;
 
   return (
@@ -82,12 +90,17 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
               <SearchIcon className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-muted-foreground" />
               <Input
                 className="pl-10"
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => onRecipeFiltersChange({ ...recipeFilters, search: e.target.value })}
                 placeholder="Search recipes..."
-                value={search}
+                value={recipeFilters.search}
               />
             </div>
-            <Button className="relative" onClick={() => setShowFilters(!showFilters)} size="sm" variant="outline">
+            <Button
+              className="relative"
+              onClick={() => onRecipeFiltersChange({ ...recipeFilters })}
+              size="sm"
+              variant="outline"
+            >
               <FilterIcon className="h-4 w-4" />
               Filters
               {activeFiltersCount > 0 && (
@@ -111,8 +124,13 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
                 <div className="space-y-2">
                   <Label>Category</Label>
                   <Select
-                    onValueChange={(value) => setCategory(value === "all" ? "" : value)}
-                    value={category || "all"}
+                    onValueChange={(value) =>
+                      onRecipeFiltersChange({
+                        ...recipeFilters,
+                        category: value === "all" ? "" : value,
+                      })
+                    }
+                    value={recipeFilters.category || "all"}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -129,7 +147,15 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Cuisine</Label>
-                  <Select onValueChange={(value) => setCuisine(value === "all" ? "" : value)} value={cuisine || "all"}>
+                  <Select
+                    onValueChange={(value) =>
+                      onRecipeFiltersChange({
+                        ...recipeFilters,
+                        cuisine: value === "all" ? "" : value,
+                      })
+                    }
+                    value={recipeFilters.cuisine || "all"}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>
@@ -145,7 +171,15 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Sort by</Label>
-                  <Select onValueChange={(value) => setSortBy(value as typeof sortBy)} value={sortBy}>
+                  <Select
+                    onValueChange={(value) =>
+                      onRecipeFiltersChange({
+                        ...recipeFilters,
+                        sortBy: value as SortByOption,
+                      })
+                    }
+                    value={recipeFilters.sortBy}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -160,7 +194,15 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Sort order</Label>
-                  <Select onValueChange={(value) => setSortOrder(value as typeof sortOrder)} value={sortOrder}>
+                  <Select
+                    onValueChange={(value) =>
+                      onRecipeFiltersChange({
+                        ...recipeFilters,
+                        sortOrder: value as "asc" | "desc",
+                      })
+                    }
+                    value={recipeFilters.sortOrder}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -173,9 +215,14 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  checked={myRecipes}
+                  checked={recipeFilters.myRecipes}
                   id="my-recipes"
-                  onCheckedChange={(checked) => setMyRecipes(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    onRecipeFiltersChange({
+                      ...recipeFilters,
+                      myRecipes: checked as boolean,
+                    })
+                  }
                 />
                 <Label htmlFor="my-recipes">Show only my recipes</Label>
               </div>
@@ -183,12 +230,12 @@ export function RecipeSelector({ onSelect, onClose }: RecipeSelectorProps) {
           )}
           <ScrollArea className="h-[400px]">
             <div className="space-y-3 pr-4">
-              {!data?.items || data.items.length === 0 ? (
+              {!recipes || recipes.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
                   <p>No recipes found</p>
                 </div>
               ) : (
-                data.items.map((recipe) => (
+                recipes.map((recipe) => (
                   <Card className="overflow-hidden" key={recipe.id}>
                     <div className="p-4">
                       <div className="mb-3 flex items-start gap-4">

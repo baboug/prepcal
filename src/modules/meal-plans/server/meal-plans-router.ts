@@ -2,7 +2,8 @@ import { z } from "zod";
 
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
-import { createMealPlanSchema, mealPlanFiltersSchema, updateMealPlanSchema } from "../schemas";
+import { createMealPlanSchema, generateMealPlanSchema, mealPlanFiltersSchema, updateMealPlanSchema } from "../schemas";
+import * as mealPlansAiService from "./meal-plans-ai-service";
 import * as mealPlansService from "./meal-plans-service";
 
 export const mealPlansRouter = createTRPCRouter({
@@ -31,27 +32,7 @@ export const mealPlansRouter = createTRPCRouter({
   delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
     return await mealPlansService.deleteMealPlan(input.id, ctx.auth.user.id);
   }),
-  updateShoppingList: protectedProcedure
-    .input(z.object({ id: z.number(), shoppingList: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return await mealPlansService.updateShoppingList(input.id, ctx.auth.user.id, input.shoppingList);
-    }),
-  updateMealPrepPlan: protectedProcedure
-    .input(z.object({ id: z.number(), mealPrepPlan: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return await mealPlansService.updateMealPrepPlan(input.id, ctx.auth.user.id, input.mealPrepPlan);
-    }),
-
-  // Placeholder for AI generation - will be implemented later
-  generateMealPlan: protectedProcedure
-    .input(z.object({ preferences: z.record(z.unknown()) }))
-    .mutation(({ ctx, input }) => {
-      return mealPlansService.generateMealPlan(ctx.auth.user.id, input.preferences);
-    }),
-  generateShoppingList: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) => {
-    return mealPlansService.generateShoppingList(input.id, ctx.auth.user.id);
-  }),
-  generateMealPrepGuide: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) => {
-    return mealPlansService.generateMealPrepGuide(input.id, ctx.auth.user.id);
+  generateMeals: protectedProcedure.input(generateMealPlanSchema).mutation(async ({ input }) => {
+    return await mealPlansAiService.generateMealPlan(input);
   }),
 });

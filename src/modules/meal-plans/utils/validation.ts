@@ -59,6 +59,10 @@ export async function validateStep(
         });
         return { isValid: true };
 
+      case Steps.AI_GENERATION:
+        // AI generation step is always valid (it's optional)
+        return { isValid: true };
+
       case Steps.MEALS: {
         await mealPlanMealsStepSchema.parseAsync({
           meals: formData.meals,

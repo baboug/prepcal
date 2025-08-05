@@ -14,16 +14,22 @@ export const MEAL_PLAN_STEPS = [
     order: 2,
   },
   {
+    id: MealPlanStep.AI_GENERATION,
+    title: "AI Generation",
+    description: "Generate meals with AI or continue manually",
+    order: 3,
+  },
+  {
     id: MealPlanStep.MEALS,
     title: "Meals",
     description: "Select and customize your meals",
-    order: 3,
+    order: 4,
   },
   {
     id: MealPlanStep.PREVIEW,
     title: "Preview",
     description: "Review your meal plan",
-    order: 4,
+    order: 5,
   },
 ] as const;
 

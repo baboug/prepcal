@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,13 +14,22 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
 import { MEAL_PLAN_STEPS } from "../../constants";
-import { type MealPlanData, MealPlanStep } from "../../types";
+import { type MealPlanData, MealPlanStep, type SortByOption } from "../../types";
 import { validateStep } from "../../utils/validation";
 import { MealPlanNutritionCard } from "./meal-plan-nutrition-card";
 import { MealPlanBasicInfoStep } from "./steps/meal-plan-basic-info-step";
 import { MealPlanMealsStep } from "./steps/meal-plan-meals-step";
 import { MealPlanPreferencesStep } from "./steps/meal-plan-preferences-step";
 import { MealPlanPreviewStep } from "./steps/meal-plan-preview-step";
+
+interface RecipeFilters {
+  search: string;
+  category: string;
+  cuisine: string;
+  myRecipes: boolean;
+  sortBy: SortByOption;
+  sortOrder: "asc" | "desc";
+}
 
 interface EditMealPlanFormProps {
   mealPlanId: number;
@@ -32,8 +42,29 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<MealPlanStep>(MealPlanStep.BASIC_INFO);
   const [selectedDay, setSelectedDay] = useState<number>(1);
+  const [recipeFilters, setRecipeFilters] = useState<RecipeFilters>({
+    search: "",
+    category: "",
+    cuisine: "",
+    myRecipes: false,
+    sortBy: "default",
+    sortOrder: "desc",
+  });
 
   const { data: existingMealPlan } = useSuspenseQuery(trpc.mealPlans.getOne.queryOptions({ id: mealPlanId }));
+
+  const { data: recipesData } = useQuery(
+    trpc.recipes.getMany.queryOptions({
+      search: recipeFilters.search,
+      category: recipeFilters.category,
+      cuisine: recipeFilters.cuisine,
+      myRecipes: recipeFilters.myRecipes,
+      sortBy: recipeFilters.sortBy,
+      sortOrder: recipeFilters.sortOrder,
+      page: 1,
+      pageSize: 50,
+    })
+  );
 
   const form = useForm<MealPlanData>({
     mode: "onChange",
@@ -170,7 +201,14 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
                 {currentStep === MealPlanStep.BASIC_INFO && <MealPlanBasicInfoStep form={form} />}
                 {currentStep === MealPlanStep.PREFERENCES && <MealPlanPreferencesStep form={form} />}
                 {currentStep === MealPlanStep.MEALS && (
-                  <MealPlanMealsStep form={form} onSelectedDayChange={setSelectedDay} selectedDay={selectedDay} />
+                  <MealPlanMealsStep
+                    form={form}
+                    onRecipeFiltersChange={setRecipeFilters}
+                    onSelectedDayChange={setSelectedDay}
+                    recipeFilters={recipeFilters}
+                    recipes={recipesData?.items || []}
+                    selectedDay={selectedDay}
+                  />
                 )}
                 {currentStep === MealPlanStep.PREVIEW && <MealPlanPreviewStep form={form} />}
                 <div className="flex justify-between pt-6">

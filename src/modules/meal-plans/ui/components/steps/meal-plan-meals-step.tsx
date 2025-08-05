@@ -29,8 +29,8 @@ import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { MealData, MealPlanData, SortByOption } from "@/modules/meal-plans/types";
 import type { RecipesGetMany } from "@/modules/recipes/types";
-import type { MealData, MealPlanData } from "../../../types";
 import { getDayOptions } from "../../../utils/date";
 import { MealCard } from "../meal-card";
 import { RecipeSelector } from "../recipe-selector";
@@ -39,6 +39,23 @@ interface MealPlanMealsStepProps {
   form: UseFormReturn<MealPlanData>;
   selectedDay?: number;
   onSelectedDayChange?: (day: number) => void;
+  recipes: RecipesGetMany;
+  recipeFilters: {
+    search: string;
+    category: string;
+    cuisine: string;
+    myRecipes: boolean;
+    sortBy: SortByOption;
+    sortOrder: "asc" | "desc";
+  };
+  onRecipeFiltersChange: (filters: {
+    search: string;
+    category: string;
+    cuisine: string;
+    myRecipes: boolean;
+    sortBy: SortByOption;
+    sortOrder: "asc" | "desc";
+  }) => void;
 }
 
 interface SortableMealItemProps {
@@ -56,26 +73,24 @@ function SortableMealItem({ meal, index, onUpdate, onRemove }: SortableMealItemP
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.5 : undefined,
   };
 
   return (
-    <MealCard
-      className={isDragging ? "shadow-lg" : ""}
-      dragHandleProps={{ ...attributes, ...listeners }}
-      index={index}
-      isDraggable
-      isEditable
-      meal={meal}
-      onRemove={onRemove}
-      onUpdate={onUpdate}
-      ref={setNodeRef}
-      style={style}
-    />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <MealCard index={index} isDraggable meal={meal} onRemove={onRemove} onUpdate={onUpdate} />
+    </div>
   );
 }
 
-export function MealPlanMealsStep({ form, selectedDay = 1, onSelectedDayChange }: MealPlanMealsStepProps) {
+export function MealPlanMealsStep({
+  form,
+  selectedDay = 1,
+  onSelectedDayChange,
+  recipes,
+  recipeFilters,
+  onRecipeFiltersChange,
+}: MealPlanMealsStepProps) {
   const [showRecipeSelector, setShowRecipeSelector] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const watchedMeals = form.watch("meals");
@@ -126,27 +141,25 @@ export function MealPlanMealsStep({ form, selectedDay = 1, onSelectedDayChange }
     form.setValue("meals", updatedMeals);
   };
 
-  const duplicateDay = (dayToDuplicate: number) => {
-    const dayMeals = getMealsForDay(dayToDuplicate);
-    const currentDayMeals = getMealsForDay(selectedDay);
-    const startingSortOrder = currentDayMeals.length;
+  const getMealsForDay = (day: number) => {
+    return watchedMeals.filter((meal: MealData & { recipe?: RecipesGetMany[0] }) => meal.day === day);
+  };
 
-    const newMeals = dayMeals.map((meal, index) => ({
+  const duplicateDay = (fromDay: number) => {
+    const sourceMeals = getMealsForDay(fromDay);
+    const newMeals = sourceMeals.map((meal) => ({
       ...meal,
       day: selectedDay,
-      sortOrder: startingSortOrder + index,
     }));
 
-    form.setValue("meals", [...watchedMeals, ...newMeals]);
+    const otherMeals = watchedMeals.filter((meal) => meal.day !== selectedDay);
+
+    form.setValue("meals", [...otherMeals, ...newMeals]);
   };
 
-  const clearDay = (dayToClear: number) => {
-    const updatedMeals = watchedMeals.filter((meal) => meal.day !== dayToClear);
-    form.setValue("meals", updatedMeals);
-  };
-
-  const getMealsForDay = (day: number) => {
-    return watchedMeals.filter((meal) => meal.day === day).sort((a, b) => a.sortOrder - b.sortOrder);
+  const clearDay = (day: number) => {
+    const remainingMeals = watchedMeals.filter((meal) => meal.day !== day);
+    form.setValue("meals", remainingMeals);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -161,26 +174,25 @@ export function MealPlanMealsStep({ form, selectedDay = 1, onSelectedDayChange }
       return;
     }
 
-    const dayMeals = getMealsForDay(selectedDay);
-    const oldIndex = dayMeals.findIndex((meal) => `meal-${meal.recipeId}-${watchedMeals.indexOf(meal)}` === active.id);
-    const newIndex = dayMeals.findIndex((meal) => `meal-${meal.recipeId}-${watchedMeals.indexOf(meal)}` === over.id);
+    const activeIndex = watchedMeals.findIndex((meal, index) => `meal-${meal.recipeId}-${index}` === active.id);
+    const overIndex = watchedMeals.findIndex((meal, index) => `meal-${meal.recipeId}-${index}` === over.id);
 
-    if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-      const reorderedDayMeals = arrayMove(dayMeals, oldIndex, newIndex);
-      const updatedMeals = [...watchedMeals];
-      reorderedDayMeals.forEach((meal, index) => {
-        const globalIndex = watchedMeals.indexOf(meal);
-        updatedMeals[globalIndex] = { ...meal, sortOrder: index };
-      });
+    if (activeIndex !== -1 && overIndex !== -1) {
+      const activeMeal = watchedMeals[activeIndex];
+      const overMeal = watchedMeals[overIndex];
 
-      form.setValue("meals", updatedMeals);
+      // Only allow reordering within the same day
+      if (activeMeal.day === overMeal.day) {
+        const reorderedMeals = arrayMove(watchedMeals, activeIndex, overIndex);
+        form.setValue("meals", reorderedMeals);
+      }
     }
 
     setActiveId(null);
   };
 
   const activeItem = activeId
-    ? watchedMeals.find((meal) => `meal-${meal.recipeId}-${watchedMeals.indexOf(meal)}` === activeId)
+    ? watchedMeals.find((meal, index) => `meal-${meal.recipeId}-${index}` === activeId)
     : null;
 
   return (
@@ -288,7 +300,15 @@ export function MealPlanMealsStep({ form, selectedDay = 1, onSelectedDayChange }
           </TabsContent>
         ))}
       </Tabs>
-      {showRecipeSelector && <RecipeSelector onClose={() => setShowRecipeSelector(false)} onSelect={addMeal} />}
+      {showRecipeSelector && (
+        <RecipeSelector
+          onClose={() => setShowRecipeSelector(false)}
+          onRecipeFiltersChange={onRecipeFiltersChange}
+          onSelect={addMeal}
+          recipeFilters={recipeFilters}
+          recipes={recipes}
+        />
+      )}
       <FormField
         control={form.control}
         name="meals"
