@@ -1,19 +1,10 @@
 "use client";
 
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { format } from "date-fns";
+
 import { TextShimmer } from "@/components/ui/text-shimmer";
 
-interface MealPlanLoadingScreenProps {
-  startDate?: Date;
-  endDate?: Date;
-  mealsPerDay?: number;
-}
-
-export function MealPlanLoadingScreen({ startDate, endDate, mealsPerDay }: MealPlanLoadingScreenProps) {
-  const formattedStartDate = startDate ? format(startDate, "PPP") : "...";
-  const formattedEndDate = endDate ? format(endDate, "PPP") : "...";
-
+export function MealPlanLoadingScreen() {
   return (
     <div className="flex flex-col items-center justify-center space-y-6 rounded-lg border p-8 text-center">
       <TextShimmer
@@ -22,11 +13,6 @@ export function MealPlanLoadingScreen({ startDate, endDate, mealsPerDay }: MealP
       >
         Generating Your Meal Plan...
       </TextShimmer>
-      <p className="text-muted-foreground">
-        Crafting a delicious and nutritious plan from <span className="font-medium">{formattedStartDate}</span> to{" "}
-        <span className="font-medium">{formattedEndDate}</span> with{" "}
-        <span className="font-medium">{mealsPerDay ?? "your specified number of"}</span> meals per day.
-      </p>
       <div className="!mt-0 h-64 w-64">
         <DotLottieReact autoplay loop src={"/animations/cooking-animation.lottie"} />
       </div>
