@@ -51,6 +51,12 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
     sortOrder: "desc",
   });
 
+  // Filter out AI_GENERATION step for editing and reorder
+  const editSteps = MEAL_PLAN_STEPS.filter((step) => step.id !== MealPlanStep.AI_GENERATION).map((step, index) => ({
+    ...step,
+    order: index + 1,
+  }));
+
   const { data: existingMealPlan } = useSuspenseQuery(trpc.mealPlans.getOne.queryOptions({ id: mealPlanId }));
 
   const { data: recipesData } = useQuery(
@@ -107,9 +113,9 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
     })
   );
 
-  const currentStepData = MEAL_PLAN_STEPS.find((step) => step.id === currentStep);
+  const currentStepData = editSteps.find((step) => step.id === currentStep);
   const currentStepOrder = currentStepData?.order || 1;
-  const totalSteps = MEAL_PLAN_STEPS.length;
+  const totalSteps = editSteps.length;
   const progress = (currentStepOrder / totalSteps) * 100;
 
   const validateCurrentStep = async () => {
@@ -130,14 +136,14 @@ export function EditMealPlanForm({ mealPlanId, onSuccess }: EditMealPlanFormProp
   };
 
   const getNextStep = (current: MealPlanStep): MealPlanStep | null => {
-    const currentOrder = MEAL_PLAN_STEPS.find((step) => step.id === current)?.order || 1;
-    const nextStep = MEAL_PLAN_STEPS.find((step) => step.order === currentOrder + 1);
+    const currentIndex = editSteps.findIndex((step) => step.id === current);
+    const nextStep = editSteps[currentIndex + 1];
     return nextStep?.id || null;
   };
 
   const getPreviousStep = (current: MealPlanStep): MealPlanStep | null => {
-    const currentOrder = MEAL_PLAN_STEPS.find((step) => step.id === current)?.order || 1;
-    const previousStep = MEAL_PLAN_STEPS.find((step) => step.order === currentOrder - 1);
+    const currentIndex = editSteps.findIndex((step) => step.id === current);
+    const previousStep = editSteps[currentIndex - 1];
     return previousStep?.id || null;
   };
 

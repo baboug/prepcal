@@ -2,6 +2,7 @@
 
 import { GripVerticalIcon, TrashIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { forwardRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,15 @@ export const MealCard = forwardRef<HTMLDivElement, MealCardProps>(
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <CardTitle className="line-clamp-1 text-base">{getRecipeTitle()}</CardTitle>
+                {meal.recipe?.id ? (
+                  <Link href={`/recipes/${meal.recipe.id}`}>
+                    <CardTitle className="line-clamp-1 cursor-pointer text-base transition-colors hover:text-primary">
+                      {getRecipeTitle()}
+                    </CardTitle>
+                  </Link>
+                ) : (
+                  <CardTitle className="line-clamp-1 text-base">{getRecipeTitle()}</CardTitle>
+                )}
                 <CardDescription className="mt-1">
                   {getMealTypeLabel()}
                   {meal.servingSize !== 1 && <span className="ml-2">({meal.servingSize}x serving)</span>}
