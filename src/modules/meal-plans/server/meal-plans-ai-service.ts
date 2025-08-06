@@ -235,6 +235,7 @@ function createMealPlanPrompt({
   availableRecipes: RecipeForAI[];
 }) {
   const totalMeals = dayCount * mealsPerDay;
+  const consistencyInstructions = getConsistencyInstructions(dayCount);
 
   return `You are a nutrition expert creating a ${dayCount}-day meal plan with ${mealsPerDay} meals per day (total: ${totalMeals} meals).
 
@@ -252,6 +253,8 @@ ${excludedIngredients.length > 0 ? `- Ingredients to avoid: ${excludedIngredient
 MEAL TYPES BY MEALS PER DAY:
 ${getMealTypeDistribution(mealsPerDay)}
 
+${consistencyInstructions}
+
 AVAILABLE RECIPES:
 ${availableRecipes.map((r) => `ID: ${r.id} | ${r.name} | Cal: ${r.calories} | P: ${r.macros.protein}g | C: ${r.macros.carbs}g | F: ${r.macros.fat}g | Servings: ${r.servings} | Cuisine: ${r.cuisine?.join(", ") || "N/A"} | Category: ${r.category?.join(", ") || "N/A"}`).join("\n")}
 
@@ -259,12 +262,28 @@ INSTRUCTIONS:
 1. Create a balanced meal plan that gets as close as possible to the daily nutrition targets
 2. Use appropriate serving sizes (0.1 to 10.0) to meet nutrition goals - don't just use 1.0
 3. Distribute meals appropriately throughout each day
-4. Ensure variety - don't repeat the same recipe too frequently
-5. Consider meal types (breakfast foods for breakfast, etc.)
-6. Respect dietary preferences and avoid excluded ingredients
-7. If cuisine preferences are specified, prioritize those cuisines but include variety
+4. IMPORTANT: Follow the meal consistency requirements above based on the number of days
+5. RECIPE BALANCE AND COMPOSITION - STRICT REQUIREMENTS:
+   - For LUNCH and DINNER: ONLY select recipes that are COMPLETE MEALS containing ALL of the following:
+     * A protein component (meat, fish, poultry, legumes, tofu, eggs, etc.) AND
+     * A carbohydrate component (rice, pasta, bread, potatoes, quinoa, grains, etc.) AND
+     * Vegetables, fruits, or other nutrient-dense ingredients
+   - REJECT single-component recipes like "Grilled Chicken", "Baked Salmon", "Steamed Broccoli" for lunch/dinner
+   - ONLY CHOOSE recipes that represent complete, balanced meals (e.g., "Chicken Teriyaki with Rice and Vegetables", "Salmon with Quinoa and Roasted Asparagus", "Beef Stir Fry with Noodles")
+   - For BREAKFAST: More flexibility allowed but still prefer complete options (e.g., "Oatmeal with Berries and Nuts" over just "Oatmeal")
+   - For SNACKS: Can be simpler single components (nuts, fruit, yogurt, etc.)
+6. RECIPE SELECTION CRITERIA:
+   - Read recipe names carefully - they should describe a complete dish, not just one ingredient
+   - Prioritize recipes with multiple components mentioned in the title or description
+   - Avoid recipes that sound like single ingredients or cooking methods only
+7. Consider meal types and ensure appropriate foods for each meal time
+8. Respect dietary preferences and avoid excluded ingredients
+9. If cuisine preferences are specified, prioritize those cuisines but include variety within the consistency constraints
+10. When selecting recipes, verify the ingredient lists contain multiple food groups
 
-Generate a meal plan that balances nutrition accuracy with meal variety and user preferences.`;
+CRITICAL: For lunch and dinner, NEVER select recipes that are just a single protein, single vegetable, or single carb. Always choose complete, multi-component meals.
+
+Generate a meal plan that balances nutrition accuracy with meal variety and user preferences while maintaining the required consistency pattern and STRICT recipe balance requirements.`;
 }
 
 function getMealTypeDistribution(mealsPerDay: number): string {
@@ -284,4 +303,23 @@ function getMealTypeDistribution(mealsPerDay: number): string {
     default:
       return "- Distribute meals evenly throughout the day";
   }
+}
+
+function getConsistencyInstructions(dayCount: number): string {
+  if (dayCount <= 3) {
+    return `MEAL CONSISTENCY REQUIREMENTS:
+- For ${dayCount} days or fewer: Use the SAME recipes for each meal type across ALL days
+- Example: If you choose Recipe A for breakfast on Day 1, use Recipe A for breakfast on ALL days
+- Example: If you choose Recipe B for lunch on Day 1, use Recipe B for lunch on ALL days
+- This creates a simple, consistent routine that's easy to follow and shop for`;
+  }
+
+  const halfPoint = Math.ceil(dayCount / 2);
+  return `MEAL CONSISTENCY REQUIREMENTS:
+- For ${dayCount} days (4+ days): Use TWO sets of consistent recipes in consecutive blocks
+- Set A recipes for Days 1-${halfPoint}
+- Set B recipes for Days ${halfPoint + 1}-${dayCount}
+- Example: Breakfast on Days 1-${halfPoint} = Recipe A, Breakfast on Days ${halfPoint + 1}-${dayCount} = Recipe B
+- Example: Lunch on Days 1-${halfPoint} = Recipe C, Lunch on Days ${halfPoint + 1}-${dayCount} = Recipe D
+- This provides variety while maintaining consistency and simplifying meal prep`;
 }
