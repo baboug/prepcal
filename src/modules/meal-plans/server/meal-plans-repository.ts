@@ -331,7 +331,7 @@ export async function deleteMealPlan(mealPlanId: number, userId: string) {
   const result = await db
     .delete(mealPlan)
     .where(and(eq(mealPlan.id, mealPlanId), eq(mealPlan.userId, userId)))
-    .returning({ id: mealPlan.id });
+    .returning();
 
   if (!result || result.length === 0) {
     throw new Error("Meal plan not found or you don't have permission to delete it");
@@ -340,36 +340,105 @@ export async function deleteMealPlan(mealPlanId: number, userId: string) {
   return result[0];
 }
 
-export async function updateMealPlanShoppingList(mealPlanId: number, userId: string, shoppingList: string) {
-  const [updated] = await db
-    .update(mealPlan)
-    .set({
-      shoppingList,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(mealPlan.id, mealPlanId), eq(mealPlan.userId, userId)))
-    .returning();
+export async function getCurrentActiveMealPlan(userId: string) {
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
 
-  if (!updated) {
-    throw new Error("Meal plan not found or you don't have permission to update it");
+  const activeMealPlans = await db
+    .select({
+      id: mealPlan.id,
+      name: mealPlan.name,
+      description: mealPlan.description,
+      startDate: mealPlan.startDate,
+      endDate: mealPlan.endDate,
+      mealsPerDay: mealPlan.mealsPerDay,
+      targetCalories: mealPlan.targetCalories,
+      targetProtein: mealPlan.targetProtein,
+      targetCarbs: mealPlan.targetCarbs,
+      targetFat: mealPlan.targetFat,
+      shoppingList: mealPlan.shoppingList,
+      mealPrepPlan: mealPlan.mealPrepPlan,
+      createdAt: mealPlan.createdAt,
+      updatedAt: mealPlan.updatedAt,
+    })
+    .from(mealPlan)
+    .where(and(eq(mealPlan.userId, userId), lte(mealPlan.startDate, today), gte(mealPlan.endDate, today)))
+    .orderBy(desc(mealPlan.createdAt))
+    .limit(1);
+
+  let currentMealPlan = activeMealPlans[0];
+
+  if (!currentMealPlan) {
+    const recentMealPlans = await db
+      .select({
+        id: mealPlan.id,
+        name: mealPlan.name,
+        description: mealPlan.description,
+        startDate: mealPlan.startDate,
+        endDate: mealPlan.endDate,
+        mealsPerDay: mealPlan.mealsPerDay,
+        targetCalories: mealPlan.targetCalories,
+        targetProtein: mealPlan.targetProtein,
+        targetCarbs: mealPlan.targetCarbs,
+        targetFat: mealPlan.targetFat,
+        shoppingList: mealPlan.shoppingList,
+        mealPrepPlan: mealPlan.mealPrepPlan,
+        createdAt: mealPlan.createdAt,
+        updatedAt: mealPlan.updatedAt,
+      })
+      .from(mealPlan)
+      .where(eq(mealPlan.userId, userId))
+      .orderBy(desc(mealPlan.createdAt))
+      .limit(1);
+
+    currentMealPlan = recentMealPlans[0];
   }
 
-  return updated;
-}
-
-export async function updateMealPlanMealPrep(mealPlanId: number, userId: string, mealPrepPlan: string) {
-  const [updated] = await db
-    .update(mealPlan)
-    .set({
-      mealPrepPlan,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(mealPlan.id, mealPlanId), eq(mealPlan.userId, userId)))
-    .returning();
-
-  if (!updated) {
-    throw new Error("Meal plan not found or you don't have permission to update it");
+  if (!currentMealPlan) {
+    return null;
   }
 
-  return updated;
+  const startDate = new Date(currentMealPlan.startDate);
+  const currentDate = new Date(today);
+  const dayNumber = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  const planDuration =
+    Math.floor((new Date(currentMealPlan.endDate).getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const adjustedDayNumber = Math.max(1, Math.min(dayNumber, planDuration));
+
+  const todaysMeals = await db
+    .select({
+      id: meal.id,
+      day: meal.day,
+      mealType: meal.mealType,
+      servingSize: meal.servingSize,
+      sortOrder: meal.sortOrder,
+      recipe: {
+        id: recipe.id,
+        name: recipe.name,
+        calories: recipe.calories,
+        macros: recipe.macros,
+        prepTime: recipe.prepTime,
+        cookTime: recipe.cookTime,
+        servings: recipe.servings,
+        imageUrl: recipe.imageUrl,
+      },
+    })
+    .from(meal)
+    .innerJoin(recipe, eq(meal.recipeId, recipe.id))
+    .where(and(eq(meal.mealPlanId, currentMealPlan.id), eq(meal.day, adjustedDayNumber)))
+    .orderBy(asc(meal.sortOrder));
+
+  return {
+    ...currentMealPlan,
+    currentDay: adjustedDayNumber,
+    todaysMeals: todaysMeals.map((m) => ({
+      id: m.id,
+      recipeId: m.recipe.id,
+      day: m.day,
+      mealType: m.mealType,
+      servingSize: m.servingSize,
+      sortOrder: m.sortOrder,
+      recipe: m.recipe,
+    })),
+  };
 }

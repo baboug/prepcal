@@ -1,8 +1,10 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
+import { getQueryClient, trpc } from "@/lib/trpc/server";
 import { DashboardView } from "@/modules/dashboard/ui/views/dashboard-view";
 
 export const metadata: Metadata = {
@@ -22,5 +24,16 @@ export default async function DashboardPage() {
     return redirect("/onboarding");
   }
 
-  return <DashboardView session={session} />;
+  const queryClient = getQueryClient();
+
+  await Promise.all([
+    queryClient.prefetchQuery(trpc.mealPlans.getCurrentActive.queryOptions()),
+    queryClient.prefetchQuery(trpc.profile.get.queryOptions()),
+  ]);
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <DashboardView session={session} />
+    </HydrationBoundary>
+  );
 }

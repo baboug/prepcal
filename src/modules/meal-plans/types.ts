@@ -16,6 +16,7 @@ import type {
 
 export type MealPlansGetOne = inferRouterOutputs<AppRouter>["mealPlans"]["getOne"];
 export type MealPlansGetMany = inferRouterOutputs<AppRouter>["mealPlans"]["getMany"]["items"];
+export type MealPlanGetCurrentActive = inferRouterOutputs<AppRouter>["mealPlans"]["getCurrentActive"];
 
 export type MealPlanData = z.infer<typeof mealPlanFormSchema>;
 export type CreateMealPlanData = z.infer<typeof createMealPlanSchema>;

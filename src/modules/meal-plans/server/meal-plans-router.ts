@@ -29,6 +29,9 @@ export const mealPlansRouter = createTRPCRouter({
       }
     );
   }),
+  getCurrentActive: protectedProcedure.query(async ({ ctx }) => {
+    return await mealPlansService.getCurrentActiveMealPlan(ctx.auth.user.id);
+  }),
   delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
     return await mealPlansService.deleteMealPlan(input.id, ctx.auth.user.id);
   }),

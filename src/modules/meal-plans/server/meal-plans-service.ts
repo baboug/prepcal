@@ -53,24 +53,25 @@ export async function getMealPlans(userId: string, filters: MealPlanFilters) {
 
 export async function deleteMealPlan(mealPlanId: number, userId: string) {
   try {
-    const existingMealPlan = await mealPlansRepository.getUserMealPlan(mealPlanId, userId);
-    if (!existingMealPlan) {
+    const result = await mealPlansRepository.deleteMealPlan(mealPlanId, userId);
+
+    if (!result) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "Meal plan not found or you don't have permission to delete it",
-      });
-    }
-
-    const deleted = await mealPlansRepository.deleteMealPlan(mealPlanId, userId);
-    if (!deleted) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to delete meal plan",
+        message: "Meal plan not found",
       });
     }
 
     return { success: true };
   } catch (error) {
     handleServiceError(error, "Failed to delete meal plan");
+  }
+}
+
+export async function getCurrentActiveMealPlan(userId: string) {
+  try {
+    return await mealPlansRepository.getCurrentActiveMealPlan(userId);
+  } catch (error) {
+    handleServiceError(error, "Failed to get current active meal plan");
   }
 }

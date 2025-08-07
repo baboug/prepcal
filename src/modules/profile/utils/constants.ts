@@ -104,6 +104,24 @@ export const ACTIVITY_LEVELS = [
   },
 ];
 
+export const ACTIVITY_LEVELS_INFO = {
+  sedentary: {
+    title: "Sedentary",
+  },
+  lightlyActive: {
+    title: "Lightly Active",
+  },
+  moderatelyActive: {
+    title: "Moderately Active",
+  },
+  veryActive: {
+    title: "Very Active",
+  },
+  extremelyActive: {
+    title: "Extremely Active",
+  },
+};
+
 export const GOALS = [
   {
     value: "loseWeight",

@@ -40,6 +40,21 @@ export const MEAL_TYPES = [
   { value: "snack", label: "Snack" },
 ] as const;
 
+export const MEAL_TYPES_INFO = {
+  breakfast: {
+    title: "Breakfast",
+  },
+  lunch: {
+    title: "Lunch",
+  },
+  dinner: {
+    title: "Dinner",
+  },
+  snack: {
+    title: "Snack",
+  },
+};
+
 export const DEFAULT_MEALS_PER_DAY = 3;
 export const MAX_MEALS_PER_DAY = 6;
 export const MIN_MEALS_PER_DAY = 1;
