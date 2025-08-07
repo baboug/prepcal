@@ -340,26 +340,28 @@ export async function deleteMealPlan(mealPlanId: number, userId: string) {
   return result[0];
 }
 
+const mealPlanSelectFields = {
+  id: mealPlan.id,
+  name: mealPlan.name,
+  description: mealPlan.description,
+  startDate: mealPlan.startDate,
+  endDate: mealPlan.endDate,
+  mealsPerDay: mealPlan.mealsPerDay,
+  targetCalories: mealPlan.targetCalories,
+  targetProtein: mealPlan.targetProtein,
+  targetCarbs: mealPlan.targetCarbs,
+  targetFat: mealPlan.targetFat,
+  shoppingList: mealPlan.shoppingList,
+  mealPrepPlan: mealPlan.mealPrepPlan,
+  createdAt: mealPlan.createdAt,
+  updatedAt: mealPlan.updatedAt,
+};
+
 export async function getCurrentActiveMealPlan(userId: string) {
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
 
   const activeMealPlans = await db
-    .select({
-      id: mealPlan.id,
-      name: mealPlan.name,
-      description: mealPlan.description,
-      startDate: mealPlan.startDate,
-      endDate: mealPlan.endDate,
-      mealsPerDay: mealPlan.mealsPerDay,
-      targetCalories: mealPlan.targetCalories,
-      targetProtein: mealPlan.targetProtein,
-      targetCarbs: mealPlan.targetCarbs,
-      targetFat: mealPlan.targetFat,
-      shoppingList: mealPlan.shoppingList,
-      mealPrepPlan: mealPlan.mealPrepPlan,
-      createdAt: mealPlan.createdAt,
-      updatedAt: mealPlan.updatedAt,
-    })
+    .select(mealPlanSelectFields)
     .from(mealPlan)
     .where(and(eq(mealPlan.userId, userId), lte(mealPlan.startDate, today), gte(mealPlan.endDate, today)))
     .orderBy(desc(mealPlan.createdAt))
@@ -369,22 +371,7 @@ export async function getCurrentActiveMealPlan(userId: string) {
 
   if (!currentMealPlan) {
     const recentMealPlans = await db
-      .select({
-        id: mealPlan.id,
-        name: mealPlan.name,
-        description: mealPlan.description,
-        startDate: mealPlan.startDate,
-        endDate: mealPlan.endDate,
-        mealsPerDay: mealPlan.mealsPerDay,
-        targetCalories: mealPlan.targetCalories,
-        targetProtein: mealPlan.targetProtein,
-        targetCarbs: mealPlan.targetCarbs,
-        targetFat: mealPlan.targetFat,
-        shoppingList: mealPlan.shoppingList,
-        mealPrepPlan: mealPlan.mealPrepPlan,
-        createdAt: mealPlan.createdAt,
-        updatedAt: mealPlan.updatedAt,
-      })
+      .select(mealPlanSelectFields)
       .from(mealPlan)
       .where(eq(mealPlan.userId, userId))
       .orderBy(desc(mealPlan.createdAt))

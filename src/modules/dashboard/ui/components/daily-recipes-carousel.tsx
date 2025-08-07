@@ -47,15 +47,25 @@ export function DailyRecipesCarousel({ mealPlan }: DailyRecipesCarouselProps) {
 
   const calculateMacroPercentages = (meal: (typeof mealPlan.todaysMeals)[0]) => {
     const totalCalories = (meal.recipe.calories || 0) * meal.servingSize;
-    if (totalCalories === 0) {
+    if (totalCalories === 0 || !meal.recipe.macros) {
       return null;
     }
 
-    const protein = ((meal.recipe.macros.protein * meal.servingSize * 4) / totalCalories) * 100;
-    const carbs = ((meal.recipe.macros.carbs * meal.servingSize * 4) / totalCalories) * 100;
-    const fat = ((meal.recipe.macros.fat * meal.servingSize * 9) / totalCalories) * 100;
+    const { protein, carbs, fat } = meal.recipe.macros;
 
-    return { protein, carbs, fat };
+    if (typeof protein !== "number" || typeof carbs !== "number" || typeof fat !== "number") {
+      return null;
+    }
+
+    const proteinPercent = ((protein * meal.servingSize * 4) / totalCalories) * 100;
+    const carbsPercent = ((carbs * meal.servingSize * 4) / totalCalories) * 100;
+    const fatPercent = ((fat * meal.servingSize * 9) / totalCalories) * 100;
+
+    return {
+      protein: proteinPercent,
+      carbs: carbsPercent,
+      fat: fatPercent,
+    };
   };
 
   return (
@@ -138,48 +148,51 @@ export function DailyRecipesCarousel({ mealPlan }: DailyRecipesCarouselProps) {
                         </CardContent>
                         <CardFooter className="mt-auto p-4 pt-0">
                           <div className="grid w-full gap-2 text-sm">
-                            {meal.recipe.macros && (
-                              <div className="grid grid-cols-3 gap-2 border-t pt-2">
-                                <div className="flex flex-col items-center gap-2 text-center">
-                                  <span className="font-medium">Protein</span>
-                                  <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-protein/10 p-2 font-medium text-protein-foreground dark:bg-protein/20 dark:text-protein-foreground">
-                                    <span className="text-xs">{Math.round(totalProtein)}g</span>
-                                    {macroPercentages?.protein && (
-                                      <>
-                                        <Separator className="my-0.5 w-3/4 bg-protein dark:bg-protein-foreground" />
-                                        <span className="font-medium text-xs">
-                                          {Math.round(macroPercentages.protein)}%
-                                        </span>
-                                      </>
-                                    )}
+                            {meal.recipe.macros &&
+                              typeof meal.recipe.macros.protein === "number" &&
+                              typeof meal.recipe.macros.carbs === "number" &&
+                              typeof meal.recipe.macros.fat === "number" && (
+                                <div className="grid grid-cols-3 gap-2 border-t pt-2">
+                                  <div className="flex flex-col items-center gap-2 text-center">
+                                    <span className="font-medium">Protein</span>
+                                    <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-protein/10 p-2 font-medium text-protein-foreground dark:bg-protein/20 dark:text-protein-foreground">
+                                      <span className="text-xs">{Math.round(totalProtein)}g</span>
+                                      {macroPercentages?.protein && (
+                                        <>
+                                          <Separator className="my-0.5 w-3/4 bg-protein dark:bg-protein-foreground" />
+                                          <span className="font-medium text-xs">
+                                            {Math.round(macroPercentages.protein)}%
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-center gap-2 text-center">
+                                    <span className="font-medium">Carbs</span>
+                                    <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-carbs/10 p-2 font-medium text-carbs-foreground dark:bg-carbs/20 dark:text-carbs-foreground">
+                                      <span className="font-medium text-xs">{Math.round(totalCarbs)}g</span>
+                                      {macroPercentages?.carbs && (
+                                        <>
+                                          <Separator className="my-0.5 w-3/4 bg-carbs dark:bg-carbs-foreground" />
+                                          <span className="text-xs">{Math.round(macroPercentages.carbs)}%</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-center gap-2 text-center">
+                                    <span className="font-medium">Fat</span>
+                                    <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-fat/10 p-2 font-medium text-fat-foreground dark:bg-fat/20 dark:text-fat-foreground">
+                                      <span className="font-medium text-xs">{Math.round(totalFat)}g</span>
+                                      {macroPercentages?.fat && (
+                                        <>
+                                          <Separator className="my-0.5 w-3/4 bg-fat dark:bg-fat-foreground" />
+                                          <span className="text-xs">{Math.round(macroPercentages.fat)}%</span>
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="flex flex-col items-center gap-2 text-center">
-                                  <span className="font-medium">Carbs</span>
-                                  <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-carbs/10 p-2 font-medium text-carbs-foreground dark:bg-carbs/20 dark:text-carbs-foreground">
-                                    <span className="font-medium text-xs">{Math.round(totalCarbs)}g</span>
-                                    {macroPercentages?.carbs && (
-                                      <>
-                                        <Separator className="my-0.5 w-3/4 bg-carbs dark:bg-carbs-foreground" />
-                                        <span className="text-xs">{Math.round(macroPercentages.carbs)}%</span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-center gap-2 text-center">
-                                  <span className="font-medium">Fat</span>
-                                  <div className="flex min-h-14 w-fit min-w-14 flex-col items-center justify-center rounded-full bg-fat/10 p-2 font-medium text-fat-foreground dark:bg-fat/20 dark:text-fat-foreground">
-                                    <span className="font-medium text-xs">{Math.round(totalFat)}g</span>
-                                    {macroPercentages?.fat && (
-                                      <>
-                                        <Separator className="my-0.5 w-3/4 bg-fat dark:bg-fat-foreground" />
-                                        <span className="text-xs">{Math.round(macroPercentages.fat)}%</span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                              )}
                           </div>
                         </CardFooter>
                       </Card>
