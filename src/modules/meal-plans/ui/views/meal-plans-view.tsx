@@ -1,6 +1,6 @@
 "use client";
 
-import { IconBowlSpoonFilled } from "@tabler/icons-react";
+import { IconChefHatFilled } from "@tabler/icons-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
@@ -29,12 +29,12 @@ export function MealPlansView() {
       ) : (
         <EmptyState
           description="Create your first meal plan to get started with organized meal planning."
-          icon={<IconBowlSpoonFilled className="size-8" />}
+          icon={<IconChefHatFilled className="size-8" />}
           title="No meal plans found"
         >
           <div className="mt-6 flex gap-2">
             <Link href="/meal-plans/new">
-              <Button variant="outline">
+              <Button>
                 <PlusIcon />
                 Create Meal Plan
               </Button>

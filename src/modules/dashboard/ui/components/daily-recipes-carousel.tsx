@@ -92,7 +92,7 @@ export function DailyRecipesCarousel({ mealPlan }: DailyRecipesCarouselProps) {
               const macroPercentages = calculateMacroPercentages(meal);
 
               return (
-                <CarouselItem className="md:basis-1/2 lg:basis-1/3" key={meal.id}>
+                <CarouselItem className="lg:basis-1/2 xl:basis-1/3" key={meal.id}>
                   <div className="h-full">
                     <Link className="block h-full" href={`/recipes/${meal.recipe.id}`}>
                       <Card className="!p-0 flex h-full flex-col gap-0 overflow-hidden transition-colors hover:bg-muted/50">
@@ -204,8 +204,8 @@ export function DailyRecipesCarousel({ mealPlan }: DailyRecipesCarouselProps) {
           </CarouselContent>
           {mealPlan.todaysMeals.length > 1 && (
             <>
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="ml-8" />
+              <CarouselNext className="mr-8" />
             </>
           )}
         </Carousel>

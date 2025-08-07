@@ -1,6 +1,6 @@
 "use client";
 
-import { IconAppsFilled, IconBarbellFilled, IconBowlSpoonFilled, IconDashboardFilled } from "@tabler/icons-react";
+import { IconBarbellFilled, IconBowlSpoonFilled, IconChefHatFilled, IconDashboardFilled } from "@tabler/icons-react";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,7 +22,7 @@ const items = [
   {
     title: "Meal Plans",
     url: "/meal-plans",
-    icon: IconAppsFilled,
+    icon: IconChefHatFilled,
   },
   {
     title: "Recipes",

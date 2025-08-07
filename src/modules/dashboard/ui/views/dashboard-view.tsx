@@ -1,15 +1,18 @@
 "use client";
 
-import { IconPlus } from "@tabler/icons-react";
+import { IconChefHatFilled } from "@tabler/icons-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Session } from "@/lib/auth";
 import { useTRPC } from "@/lib/trpc/client";
 import { getUserFirstName } from "@/lib/utils";
 import { DailyRecipesCarousel } from "@/modules/dashboard/ui/components/daily-recipes-carousel";
+import { MacroDistributionChart } from "@/modules/dashboard/ui/components/macro-distribution-chart";
+import { NutritionOverviewChart } from "@/modules/dashboard/ui/components/nutrition-overview-chart";
 import { ProfileOverviewCard } from "@/modules/dashboard/ui/components/profile-overview-card";
 import { SiteHeader } from "@/modules/dashboard/ui/components/site-header";
 
@@ -27,36 +30,34 @@ export function DashboardView({ session }: DashboardViewProps) {
     <>
       <SiteHeader title={`👋 Welcome back, ${getUserFirstName(session.user)}`} />
       <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-6 px-4 py-6 lg:px-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-              <div className="space-y-6 lg:col-span-3">
-                {currentMealPlan ? (
-                  <DailyRecipesCarousel mealPlan={currentMealPlan} />
-                ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>No Active Meal Plan</CardTitle>
-                      <CardDescription>
-                        You don't have any active meal plans. Create your first meal plan to get started!
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button asChild>
-                        <Link href="/meal-plans/new">
-                          <IconPlus className="mr-2 size-4" />
-                          Create Meal Plan
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-              <div className="space-y-6">
+        <div className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
+          {currentMealPlan ? (
+            <>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+                <NutritionOverviewChart />
+                <MacroDistributionChart />
                 <ProfileOverviewCard profile={userProfile} />
               </div>
-            </div>
-          </div>
+              <div className="space-y-6 lg:col-span-2 xl:col-span-3">
+                <DailyRecipesCarousel mealPlan={currentMealPlan} />
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              description="Create your first meal plan to get started with organized meal planning."
+              icon={<IconChefHatFilled className="size-8" />}
+              title="Create your first meal plan"
+            >
+              <div className="mt-6 flex gap-2">
+                <Link href="/meal-plans/new">
+                  <Button>
+                    <PlusIcon />
+                    Create Meal Plan
+                  </Button>
+                </Link>
+              </div>
+            </EmptyState>
+          )}
         </div>
       </div>
     </>
