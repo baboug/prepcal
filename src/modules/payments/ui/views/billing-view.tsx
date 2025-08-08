@@ -2,6 +2,8 @@
 
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authClient } from "@/lib/auth/auth-client";
@@ -38,3 +40,21 @@ export function BillingView() {
     </div>
   );
 }
+
+export function BillingViewSkeleton() {
+  return (
+    <div className="p-4 lg:p-6">
+      <LoadingState description="Please wait while we load your billing." title="Loading billing" />
+    </div>
+  );
+}
+
+export function BillingViewError() {
+  return (
+    <div className="p-4 lg:p-6">
+      <ErrorState description="Something went wrong. Please try again later." title="Error loading billing" />
+    </div>
+  );
+}
+
+// https://prepcal.com/billing/success?checkout_id=9f2d7195-9474-4bc6-92a4-005cec7482bf&customer_session_token=polar_cst_egDpc1AmCgzAKu8vMzUf0ArINfCWSMOmJyGFs3YE8Vx
