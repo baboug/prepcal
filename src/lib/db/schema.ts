@@ -18,26 +18,37 @@ export const user = pgTable("user", {
     .notNull(),
 });
 
+export const planEnum = pgEnum("billing_plan", ["free", "pro"]);
+
 // Billing and usage
 export const userBilling = pgTable("user_billing", {
   userId: text("user_id")
     .primaryKey()
-    .references(() => user.id, { onDelete: "cascade" }),
-  plan: text("plan").notNull().default("free"), // 'free' | 'pro'
+    .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
+  plan: planEnum("plan").notNull().default("free"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export type UserBilling = typeof userBilling.$inferSelect;
 export type InsertUserBilling = typeof userBilling.$inferInsert;
 
-export const usageEvent = pgTable("usage_event", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // e.g., 'ai_generate'
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const usageEventTypeEnum = pgEnum("usage_event_type", ["ai_generate"]);
+
+export const usageEvent = pgTable(
+  "usage_event",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: usageEventTypeEnum("type").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdCreatedAtIdx: index("usage_event_user_id_created_at_idx").on(table.userId, table.createdAt),
+    typeIdx: index("usage_event_type_idx").on(table.type),
+  })
+);
 
 export type UsageEvent = typeof usageEvent.$inferSelect;
 export type InsertUsageEvent = typeof usageEvent.$inferInsert;

@@ -1,5 +1,5 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
 import * as paymentsService from "@/modules/payments/server/payments-service";
@@ -37,12 +37,24 @@ export const mealPlansRouter = createTRPCRouter({
     return await mealPlansService.deleteMealPlan(input.id, ctx.auth.user.id);
   }),
   generateMeals: protectedProcedure.input(generateMealPlanSchema).mutation(async ({ ctx, input }) => {
-    const allowed = await paymentsService.canUseAiGeneration(ctx.auth.user.id);
+    const userId = ctx.auth.user.id;
+    const allowed = await paymentsService.canUseAiGeneration(userId);
     if (!allowed) {
-      throw new Error("AI generation limit reached. Upgrade to Pro to generate more meal plans.");
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "AI generation limit reached. Upgrade to Pro to generate more meal plans.",
+      });
     }
-    const result = await mealPlansAiService.generateMealPlan(input);
-    await paymentsService.recordAiGeneration(ctx.auth.user.id);
-    return result;
+
+    try {
+      const result = await mealPlansAiService.generateMealPlan(input);
+      return result;
+    } catch (err) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to generate meal plan",
+        cause: err,
+      });
+    }
   }),
 });

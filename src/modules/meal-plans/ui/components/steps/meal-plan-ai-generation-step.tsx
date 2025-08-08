@@ -36,9 +36,14 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
         }, 1000);
       },
       onError: (error) => {
-        toast.error(
-          error.message || "AI generation limit reached this month. Upgrade to Pro on the Billing page to continue."
-        );
+        // biome-ignore lint/suspicious/noExplicitAny: -
+        const code = (error as any)?.data?.code;
+
+        const message =
+          code === "TOO_MANY_REQUESTS" || code === "PAYWALL_LIMIT"
+            ? "AI generation limit reached this month. Upgrade to Pro on the Billing page to continue."
+            : "We couldn't generate meals right now. Please try again in a moment.";
+        toast.error(message);
         setIsGenerating(false);
       },
     })

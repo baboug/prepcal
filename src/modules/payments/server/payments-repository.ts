@@ -1,7 +1,7 @@
 import { and, between, eq, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { type InsertUserBilling, mealPlan, usageEvent, userBilling } from "@/lib/db/schema";
+import { mealPlan, usageEvent, userBilling } from "@/lib/db/schema";
 
 export async function getUserPlan(userId: string): Promise<"free" | "pro"> {
   const [row] = await db.select().from(userBilling).where(eq(userBilling.userId, userId)).limit(1);
@@ -9,13 +9,16 @@ export async function getUserPlan(userId: string): Promise<"free" | "pro"> {
 }
 
 export async function setUserPlan(userId: string, plan: "free" | "pro") {
-  const [existing] = await db.select().from(userBilling).where(eq(userBilling.userId, userId)).limit(1);
-  if (existing) {
-    await db.update(userBilling).set({ plan, updatedAt: new Date() }).where(eq(userBilling.userId, userId));
-  } else {
-    const row: InsertUserBilling = { userId, plan };
-    await db.insert(userBilling).values(row).onConflictDoNothing({ target: userBilling.userId });
-  }
+  await db
+    .insert(userBilling)
+    .values({ userId, plan })
+    .onConflictDoUpdate({
+      target: userBilling.userId,
+      set: {
+        plan,
+        updatedAt: new Date(),
+      },
+    });
 }
 
 export function getCurrentMonthRange(): { start: Date; end: Date } {
@@ -47,4 +50,32 @@ export async function countAiGenerationsThisMonth(userId: string): Promise<numbe
 
 export async function recordAiGeneration(userId: string) {
   await db.insert(usageEvent).values({ userId, type: "ai_generate" });
+}
+
+export async function consumeAiGenerationWithinLimit(userId: string, limit: number): Promise<boolean> {
+  return await db.transaction(
+    async (tx) => {
+      const { start, end } = getCurrentMonthRange();
+
+      const [{ count }] = await tx
+        .select({ count: sql<number>`count(*)` })
+        .from(usageEvent)
+        .where(
+          and(
+            eq(usageEvent.userId, userId),
+            eq(usageEvent.type, "ai_generate"),
+            between(usageEvent.createdAt, start, end)
+          )
+        );
+
+      const used = Number(count ?? 0);
+      if (used >= limit) {
+        return false;
+      }
+
+      await tx.insert(usageEvent).values({ userId, type: "ai_generate" });
+      return true;
+    },
+    { isolationLevel: "serializable" as never }
+  );
 }
