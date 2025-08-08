@@ -1,12 +1,20 @@
 import { TRPCError } from "@trpc/server";
 
 import { handleServiceError } from "@/lib/trpc/utils";
+import * as paymentsService from "@/modules/payments/server/payments-service";
 import { mealPlanFiltersSchema } from "../schemas";
 import type { CreateMealPlanData, MealPlanFilters } from "../types";
 import * as mealPlansRepository from "./meal-plans-repository";
 
 export async function createMealPlan(userId: string, data: CreateMealPlanData) {
   try {
+    const allowed = await paymentsService.canCreateMealPlan(userId);
+    if (!allowed) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Free plan limit reached. Upgrade to Pro to create more meal plans.",
+      });
+    }
     return await mealPlansRepository.createMealPlan(userId, data);
   } catch (error) {
     handleServiceError(error, "Failed to create meal plan");

@@ -18,6 +18,30 @@ export const user = pgTable("user", {
     .notNull(),
 });
 
+// Billing and usage
+export const userBilling = pgTable("user_billing", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  plan: text("plan").notNull().default("free"), // 'free' | 'pro'
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type UserBilling = typeof userBilling.$inferSelect;
+export type InsertUserBilling = typeof userBilling.$inferInsert;
+
+export const usageEvent = pgTable("usage_event", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // e.g., 'ai_generate'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type UsageEvent = typeof usageEvent.$inferSelect;
+export type InsertUsageEvent = typeof usageEvent.$inferInsert;
+
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),

@@ -1,3 +1,5 @@
+import { checkout, polar, portal, usage, webhooks } from "@polar-sh/better-auth";
+import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
@@ -13,6 +15,54 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
+  plugins: [
+    polar({
+      client: new Polar({
+        accessToken: env.POLAR_ACCESS_TOKEN,
+        server: env.POLAR_SERVER,
+      }),
+      createCustomerOnSignUp: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: env.POLAR_PRO_PRODUCT_ID,
+              slug: "pro",
+            },
+          ],
+          successUrl: "/billing/success?checkout_id={CHECKOUT_ID}",
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+        usage(),
+        webhooks({
+          secret: env.POLAR_WEBHOOK_SECRET,
+          onSubscriptionActive: async (payload: unknown) => {
+            const p = payload as {
+              data?: { customer?: { externalId?: unknown } };
+              customer?: { externalId?: unknown };
+            };
+            const userId = (p.data?.customer?.externalId ?? p.customer?.externalId) as unknown;
+            if (typeof userId === "string") {
+              const { setPlanBySubscription } = await import("@/modules/payments/server/payments-service");
+              await setPlanBySubscription(userId, true);
+            }
+          },
+          onSubscriptionCanceled: async (payload: unknown) => {
+            const p = payload as {
+              data?: { customer?: { externalId?: unknown } };
+              customer?: { externalId?: unknown };
+            };
+            const userId = (p.data?.customer?.externalId ?? p.customer?.externalId) as unknown;
+            if (typeof userId === "string") {
+              const { setPlanBySubscription } = await import("@/modules/payments/server/payments-service");
+              await setPlanBySubscription(userId, false);
+            }
+          },
+        }),
+      ],
+    }),
+  ],
   socialProviders: {
     google: {
       clientId: env.GOOGLE_CLIENT_ID,

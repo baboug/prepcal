@@ -2,10 +2,10 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRightIcon, SparklesIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTRPC } from "@/lib/trpc/client";
@@ -36,7 +36,9 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
         }, 1000);
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to generate meal plan. Please try again.");
+        toast.error(
+          error.message || "AI generation limit reached this month. Upgrade to Pro on the Billing page to continue."
+        );
         setIsGenerating(false);
       },
     })
@@ -160,6 +162,12 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
               Continue Manually
               <ArrowRightIcon className="ml-2 size-4" />
             </Button>
+            <p className="text-center text-muted-foreground text-xs">
+              Hitting limits?{" "}
+              <Link className="underline" href="/billing">
+                Upgrade to Pro
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>

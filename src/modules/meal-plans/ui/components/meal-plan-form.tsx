@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -39,6 +39,7 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { data: limits } = useQuery(trpc.payments.limits.queryOptions());
   const [currentStep, setCurrentStep] = useState<MealPlanStep>(MealPlanStep.BASIC_INFO);
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [recipeFilters, setRecipeFilters] = useState<RecipeFilters>({
@@ -85,9 +86,9 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
         router.push("/meal-plans");
         onSuccess?.();
       },
-      onError: () => {
+      onError: (error) => {
         form.setError("root", {
-          message: "Failed to create meal plan. Please try again.",
+          message: error.message ?? "Failed to create meal plan. Please try again.",
         });
       },
     })
@@ -159,6 +160,10 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   const onSubmit = async () => {
     if (isLastStep) {
       const formData = form.getValues();
+      if (limits && !limits.mealPlans.canCreate) {
+        toast.error("You've reached your monthly meal plan limit. Upgrade to Pro to create more.");
+        return;
+      }
       createMealPlan.mutate(formData);
     } else {
       await handleNext();
