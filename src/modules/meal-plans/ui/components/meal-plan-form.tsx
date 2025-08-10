@@ -39,7 +39,7 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { data: limits } = useQuery(trpc.payments.limits.queryOptions());
+  const { data: limits } = useQuery(trpc.billing.limits.queryOptions());
   const [currentStep, setCurrentStep] = useState<MealPlanStep>(MealPlanStep.BASIC_INFO);
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [recipeFilters, setRecipeFilters] = useState<RecipeFilters>({

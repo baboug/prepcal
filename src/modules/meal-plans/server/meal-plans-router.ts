@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
-import * as paymentsService from "@/modules/payments/server/payments-service";
+import * as billingService from "@/modules/billing/server/billing-service";
 import { createMealPlanSchema, generateMealPlanSchema, mealPlanFiltersSchema, updateMealPlanSchema } from "../schemas";
 import * as mealPlansAiService from "./meal-plans-ai-service";
 import * as mealPlansService from "./meal-plans-service";
@@ -38,7 +38,7 @@ export const mealPlansRouter = createTRPCRouter({
   }),
   generateMeals: protectedProcedure.input(generateMealPlanSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.auth.user.id;
-    const allowed = await paymentsService.canUseAiGeneration(userId);
+    const allowed = await billingService.canUseAiGeneration(userId);
     if (!allowed) {
       throw new TRPCError({
         code: "FORBIDDEN",

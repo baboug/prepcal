@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "@/lib/trpc/init";
-import * as service from "./payments-service";
+import * as service from "./billing-service";
 
-export const paymentsRouter = createTRPCRouter({
+export const billingRouter = createTRPCRouter({
   checkout: protectedProcedure.mutation(() => {
     // Using Better Auth client plugin on frontend to redirect; this is a no-op endpoint for type cohesion if needed
     return { slug: service.getCheckoutSlug() };

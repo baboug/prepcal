@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { Session } from "@/lib/auth";
 import { useTRPC } from "@/lib/trpc/client";
 import { getUserFirstName } from "@/lib/utils";
+import { BillingOverviewCard } from "@/modules/billing/ui/components/billing-overview-card";
 import { DailyRecipesCarousel } from "@/modules/dashboard/ui/components/daily-recipes-carousel";
 import { MacroDistributionChart } from "@/modules/dashboard/ui/components/macro-distribution-chart";
 import { NutritionOverviewChart } from "@/modules/dashboard/ui/components/nutrition-overview-chart";
@@ -36,7 +37,10 @@ export function DashboardView({ session }: DashboardViewProps) {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
                 <NutritionOverviewChart />
                 <MacroDistributionChart />
-                <ProfileOverviewCard profile={userProfile} />
+                <div className="grid grid-cols-1 gap-6">
+                  <ProfileOverviewCard profile={userProfile} />
+                  <BillingOverviewCard />
+                </div>
               </div>
               <div className="space-y-6 lg:col-span-2 xl:col-span-3">
                 <DailyRecipesCarousel mealPlan={currentMealPlan} />

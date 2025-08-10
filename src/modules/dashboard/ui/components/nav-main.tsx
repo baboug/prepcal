@@ -1,6 +1,12 @@
 "use client";
 
-import { IconBarbellFilled, IconBowlSpoonFilled, IconChefHatFilled, IconDashboardFilled } from "@tabler/icons-react";
+import {
+  IconBarbellFilled,
+  IconBowlSpoonFilled,
+  IconChefHatFilled,
+  IconCreditCardFilled,
+  IconDashboardFilled,
+} from "@tabler/icons-react";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,6 +39,11 @@ const items = [
     title: "Profile",
     url: "/profile",
     icon: IconBarbellFilled,
+  },
+  {
+    title: "Billing",
+    url: "/billing",
+    icon: IconCreditCardFilled,
   },
 ];
 

@@ -1,14 +1,14 @@
 import { TRPCError } from "@trpc/server";
 
 import { handleServiceError } from "@/lib/trpc/utils";
-import * as paymentsService from "@/modules/payments/server/payments-service";
+import * as billingService from "@/modules/billing/server/billing-service";
 import { mealPlanFiltersSchema } from "../schemas";
 import type { CreateMealPlanData, MealPlanFilters } from "../types";
 import * as mealPlansRepository from "./meal-plans-repository";
 
 export async function createMealPlan(userId: string, data: CreateMealPlanData) {
   try {
-    const allowed = await paymentsService.canCreateMealPlan(userId);
+    const allowed = await billingService.canCreateMealPlan(userId);
     if (!allowed) {
       throw new TRPCError({
         code: "FORBIDDEN",

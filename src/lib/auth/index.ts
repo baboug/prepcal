@@ -44,7 +44,7 @@ export const auth = betterAuth({
             };
             const userId = (p.data?.customer?.externalId ?? p.customer?.externalId) as unknown;
             if (typeof userId === "string") {
-              const { setPlanBySubscription } = await import("@/modules/payments/server/payments-service");
+              const { setPlanBySubscription } = await import("@/modules/billing/server/billing-service");
               await setPlanBySubscription(userId, true);
             }
           },
@@ -55,7 +55,7 @@ export const auth = betterAuth({
             };
             const userId = (p.data?.customer?.externalId ?? p.customer?.externalId) as unknown;
             if (typeof userId === "string") {
-              const { setPlanBySubscription } = await import("@/modules/payments/server/payments-service");
+              const { setPlanBySubscription } = await import("@/modules/billing/server/billing-service");
               await setPlanBySubscription(userId, false);
             }
           },

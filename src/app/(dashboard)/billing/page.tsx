@@ -6,7 +6,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import { auth } from "@/lib/auth";
 import { getQueryClient, trpc } from "@/lib/trpc/server";
-import { BillingView, BillingViewError, BillingViewSkeleton } from "@/modules/payments/ui/views/billing-view";
+import { BillingView, BillingViewError, BillingViewSkeleton } from "@/modules/billing/ui/views/billing-view";
 
 export default async function BillingPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -20,7 +20,7 @@ export default async function BillingPage() {
   }
 
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(trpc.payments.plan.queryOptions());
+  void queryClient.prefetchQuery(trpc.billing.plan.queryOptions());
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
