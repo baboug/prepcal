@@ -1,4 +1,4 @@
-import { IconEdit, IconTarget, IconUser } from "@tabler/icons-react";
+import { IconEdit, IconTarget } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +16,7 @@ export function ProfileOverviewCard({ profile }: ProfileOverviewCardProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <IconUser className="size-5" />
-            Profile Setup
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2">Profile Setup</CardTitle>
           <CardDescription>Complete your profile to get personalized nutrition targets</CardDescription>
         </CardHeader>
         <CardContent>
@@ -37,10 +34,7 @@ export function ProfileOverviewCard({ profile }: ProfileOverviewCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <IconUser className="size-5" />
-          Your Profile
-        </CardTitle>
+        <CardTitle className="flex items-center gap-2">Your Profile</CardTitle>
         <CardDescription>Your nutrition targets and preferences</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-between gap-6">

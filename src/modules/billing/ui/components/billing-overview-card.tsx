@@ -2,12 +2,11 @@
 
 import { IconCreditCardFilled } from "@tabler/icons-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { CrownIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { authClient } from "@/lib/auth/auth-client";
 import { useTRPC } from "@/lib/trpc/client";
@@ -21,32 +20,28 @@ export function BillingOverviewCard() {
   const aiPct = Math.min(100, Math.round((data.aiGenerations.used / data.aiGenerations.limit) * 100));
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="gap-0 bg-sidebar p-2">
+      <CardHeader className="gap-0 p-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CrownIcon className="size-5 text-yellow-500" />
-            <CardTitle>Plan & Limits</CardTitle>
+            <CardTitle>Limits per month</CardTitle>
           </div>
           <Badge className="capitalize" variant={isPro ? "default" : "secondary"}>
             {data.plan}
           </Badge>
         </div>
-        <CardDescription>
-          {isPro ? "Enjoy higher limits and priority features." : "Upgrade to Pro to lift limits and unlock more."}
-        </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-between gap-4">
+      <CardContent className="flex flex-1 flex-col justify-between gap-4 p-2">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Meal plans per month</span>
+            <span className="text-muted-foreground">Meal plans</span>
             <span>
               {data.mealPlans.used}/{data.mealPlans.limit}
             </span>
           </div>
           <Progress value={mealPct} />
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">AI generations per month</span>
+            <span className="text-muted-foreground">AI generations</span>
             <span>
               {data.aiGenerations.used}/{data.aiGenerations.limit}
             </span>
@@ -61,7 +56,7 @@ export function BillingOverviewCard() {
             </Button>
           </Link>
         ) : (
-          <Button className="w-full" onClick={() => authClient.checkout({ slug: "pro" })} type="button">
+          <Button className="w-full" onClick={() => authClient.checkout({ slug: "pro" })} size="sm" type="button">
             Upgrade to Pro
           </Button>
         )}

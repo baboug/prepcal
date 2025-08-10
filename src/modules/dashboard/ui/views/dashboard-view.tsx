@@ -37,10 +37,7 @@ export function DashboardView({ session }: DashboardViewProps) {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
                 <NutritionOverviewChart />
                 <MacroDistributionChart />
-                <div className="grid grid-cols-1 gap-6">
-                  <ProfileOverviewCard profile={userProfile} />
-                  <BillingOverviewCard />
-                </div>
+                <ProfileOverviewCard profile={userProfile} />
               </div>
               <div className="space-y-6 lg:col-span-2 xl:col-span-3">
                 <DailyRecipesCarousel mealPlan={currentMealPlan} />

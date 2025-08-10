@@ -32,9 +32,6 @@ export function BillingView() {
                 <h2 className="font-medium">Free</h2>
                 <span className="my-3 block font-semibold text-2xl">$0 / mo</span>
               </div>
-              <Button asChild className="w-full" variant="outline">
-                <Link href="/meal-plans">Get Started</Link>
-              </Button>
               <hr className="border-dashed" />
               <ul className="list-outside space-y-3 text-sm">
                 {["3 meal plans per month", "3 AI generations per month", "Manual plan editing"].map((item, index) => (

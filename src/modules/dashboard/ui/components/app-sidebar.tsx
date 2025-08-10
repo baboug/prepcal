@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { BillingOverviewCard } from "@/modules/billing/ui/components/billing-overview-card";
 import { NavMain } from "@/modules/dashboard/ui/components/nav-main";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -25,7 +26,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="gap-4">
+        <BillingOverviewCard />
         <UserButton className="w-full bg-sidebar text-sidebar-foreground hover:bg-accent" />
       </SidebarFooter>
     </Sidebar>

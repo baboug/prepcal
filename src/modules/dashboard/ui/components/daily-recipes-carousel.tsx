@@ -26,10 +26,7 @@ export function DailyRecipesCarousel({ mealPlan }: DailyRecipesCarouselProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <IconChefHat className="size-5" />
-            Today's Recipes
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2">Today's Recipes</CardTitle>
           <CardDescription>
             {mealPlan ? `Day ${mealPlan.currentDay} of ${mealPlan.name}` : "No active meal plan"}
           </CardDescription>
@@ -71,10 +68,7 @@ export function DailyRecipesCarousel({ mealPlan }: DailyRecipesCarouselProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <IconChefHat className="size-5" />
-          Today's Recipes
-        </CardTitle>
+        <CardTitle className="flex items-center gap-2">Today's Recipes</CardTitle>
         <CardDescription>
           Day {mealPlan.currentDay} of "{mealPlan.name}" • {mealPlan.todaysMeals.length} meal
           {mealPlan.todaysMeals.length !== 1 ? "s" : ""}
