@@ -3,13 +3,13 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRightIcon, SparklesIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { authClient } from "@/lib/auth/auth-client";
 import { useTRPC } from "@/lib/trpc/client";
 import type { MealPlanData } from "@/modules/meal-plans/types";
 import { MealPlanLoadingScreen } from "../meal-plan-loading-screen";
@@ -22,7 +22,6 @@ interface MealPlanAiGenerationStepProps {
 
 export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlanAiGenerationStepProps) {
   const trpc = useTRPC();
-  const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
   const { data: userProfile } = useQuery(trpc.profile.get.queryOptions());
 
@@ -40,10 +39,10 @@ export function MealPlanAiGenerationStep({ form, onSkipAI, onSuccess }: MealPlan
       },
       onError: (error) => {
         if (error?.data?.code === "PAYMENT_REQUIRED") {
-          toast.error("AI generation limit reached this month. Upgrade to Pro on the Billing page to continue.", {
+          toast.error("AI generation limit reached this month. Upgrade to Pro to continue.", {
             action: {
               label: "Upgrade",
-              onClick: () => router.push("/billing"),
+              onClick: () => authClient.checkout({ slug: "pro" }),
             },
           });
         } else {

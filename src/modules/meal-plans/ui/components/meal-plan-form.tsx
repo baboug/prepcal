@@ -171,19 +171,17 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
 
   const onSubmit = async () => {
     if (hasReachedMealPlanLimit) {
+      toast.error("You've reached your monthly meal plan limit. Upgrade to Pro to create more.", {
+        action: {
+          label: "Upgrade",
+          onClick: () => authClient.checkout({ slug: "pro" }),
+        },
+      });
       return;
     }
+
     if (isLastStep) {
       const formData = form.getValues();
-      if (limits && !limits.mealPlans.canCreate) {
-        toast.error("You've reached your monthly meal plan limit. Upgrade to Pro to create more.", {
-          action: {
-            label: "Upgrade",
-            onClick: () => router.push("/billing"),
-          },
-        });
-        return;
-      }
       createMealPlan.mutate(formData);
     } else {
       await handleNext();

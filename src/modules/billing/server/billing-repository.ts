@@ -55,23 +55,26 @@ export async function recordAiGeneration(userId: string) {
 export async function consumeAiGenerationWithinLimit(userId: string, limit: number): Promise<boolean> {
   const { start, end } = getCurrentMonthRange();
   const result = await db.execute<{ inserted: number }>(sql`
-    WITH c AS (
+    WITH lock AS (
+      SELECT pg_advisory_xact_lock(hashtext(${userId}))
+    ),
+    c AS (
       SELECT count(*)::int AS used
-      FROM ${usageEvent}
+      FROM ${usageEvent}, lock
       WHERE ${usageEvent.userId} = ${userId}
         AND ${usageEvent.type} = 'ai_generate'
         AND ${usageEvent.createdAt} BETWEEN ${start} AND ${end}
     ),
     ins AS (
-      INSERT INTO ${usageEvent} (user_id, type)
+      INSERT INTO ${usageEvent} (${usageEvent.userId}, ${usageEvent.type})
       SELECT ${userId}, 'ai_generate'
       FROM c
       WHERE used < ${limit}
       RETURNING 1
     )
-    SELECT COALESCE((SELECT 1 FROM ins), 0) AS inserted;
+    SELECT EXISTS(SELECT 1 FROM ins) AS inserted;
   `);
 
-  const inserted = result.rows?.[0]?.inserted ?? 0;
+  const inserted = Number(result.rows?.[0]?.inserted ?? 0);
   return inserted === 1;
 }
