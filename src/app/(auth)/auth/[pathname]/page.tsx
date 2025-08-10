@@ -16,7 +16,7 @@ export default async function AuthPage({ params }: { params: Promise<{ pathname:
     headers: await headers(),
   });
 
-  if (session && pathname !== authViewPaths.SETTINGS) {
+  if (session && ![authViewPaths.SETTINGS, authViewPaths.SIGN_OUT, authViewPaths].includes(pathname)) {
     redirect("/dashboard");
   }
 

@@ -75,12 +75,7 @@ export function BillingView() {
               <div>
                 <div className="font-semibold text-sm">Everything in Free plus :</div>
                 <ul className="mt-4 list-outside space-y-3 text-sm">
-                  {[
-                    "Higher meal plan limits",
-                    "Higher AI generation limits",
-                    "Customer portal access",
-                    "Priority support",
-                  ].map((item, index) => (
+                  {["Higher meal plan limits", "Higher AI generation limits", "Priority support"].map((item, index) => (
                     <li className="flex items-center gap-2" key={index}>
                       <CheckIcon className="size-3" /> {item}
                     </li>
