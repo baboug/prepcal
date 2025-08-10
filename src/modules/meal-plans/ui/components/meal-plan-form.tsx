@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
+import { authClient } from "@/lib/auth/auth-client";
 import { useTRPC } from "@/lib/trpc/client";
 import { MEAL_PLAN_STEPS } from "../../constants";
 import { type MealPlanData, MealPlanStep, type SortByOption } from "../../types";
@@ -98,6 +100,7 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   const currentStepOrder = currentStepData?.order || 1;
   const totalSteps = MEAL_PLAN_STEPS.length;
   const progress = (currentStepOrder / totalSteps) * 100;
+  const hasReachedMealPlanLimit = !!limits && !limits.mealPlans.canCreate;
 
   const validateCurrentStep = async () => {
     const formData = form.getValues();
@@ -131,6 +134,9 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   const isLastStep = currentStepOrder === totalSteps;
 
   const handleNext = async () => {
+    if (hasReachedMealPlanLimit) {
+      return;
+    }
     const isValid = await validateCurrentStep();
     if (isValid) {
       const nextStep = getNextStep(currentStep);
@@ -142,6 +148,9 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   };
 
   const handlePrevious = () => {
+    if (hasReachedMealPlanLimit) {
+      return;
+    }
     const previousStep = getPreviousStep(currentStep);
     if (previousStep) {
       setCurrentStep(previousStep);
@@ -149,6 +158,9 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   };
 
   const handleAiStepCompletion = () => {
+    if (hasReachedMealPlanLimit) {
+      return;
+    }
     const nextStep = getNextStep(currentStep);
 
     if (nextStep) {
@@ -158,10 +170,18 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   };
 
   const onSubmit = async () => {
+    if (hasReachedMealPlanLimit) {
+      return;
+    }
     if (isLastStep) {
       const formData = form.getValues();
       if (limits && !limits.mealPlans.canCreate) {
-        toast.error("You've reached your monthly meal plan limit. Upgrade to Pro to create more.");
+        toast.error("You've reached your monthly meal plan limit. Upgrade to Pro to create more.", {
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/billing"),
+          },
+        });
         return;
       }
       createMealPlan.mutate(formData);
@@ -173,6 +193,19 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
+        {hasReachedMealPlanLimit ? (
+          <Alert className="flex items-start justify-between gap-4" variant="destructive">
+            <div>
+              <AlertTitle>Monthly meal plan limit reached</AlertTitle>
+              <AlertDescription>
+                You&apos;ve reached your monthly limit for creating meal plans. Upgrade to Pro to create more.
+              </AlertDescription>
+            </div>
+            <Button onClick={() => authClient.checkout({ slug: "pro" })} type="button" variant="default">
+              Upgrade to Pro
+            </Button>
+          </Alert>
+        ) : null}
         <div className="space-y-2">
           <div className="flex justify-between text-muted-foreground text-sm">
             <span>
@@ -211,10 +244,19 @@ export function MealPlanForm({ onSuccess }: MealPlanFormProps) {
                 )}
                 {currentStep === MealPlanStep.PREVIEW && <MealPlanPreviewStep form={form} />}
                 <div className="flex justify-between pt-6">
-                  <Button disabled={isFirstStep} onClick={handlePrevious} type="button" variant="outline">
+                  <Button
+                    disabled={isFirstStep || hasReachedMealPlanLimit}
+                    onClick={handlePrevious}
+                    type="button"
+                    variant="outline"
+                  >
                     Previous
                   </Button>
-                  <Button disabled={createMealPlan.isPending} isLoading={createMealPlan.isPending} type="submit">
+                  <Button
+                    disabled={createMealPlan.isPending || hasReachedMealPlanLimit}
+                    isLoading={createMealPlan.isPending}
+                    type="submit"
+                  >
                     {isLastStep ? "Create Meal Plan" : "Next"}
                   </Button>
                 </div>

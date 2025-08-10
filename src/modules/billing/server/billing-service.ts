@@ -15,8 +15,8 @@ export async function canCreateMealPlan(userId: string): Promise<boolean> {
 export async function canUseAiGeneration(userId: string): Promise<boolean> {
   const plan = await billingRepository.getUserPlan(userId);
   const limit = plan === "pro" ? PRO_LIMITS.aiGenerations : FREE_LIMITS.aiGenerations;
-  const consumed = await billingRepository.consumeAiGenerationWithinLimit(userId, limit);
-  return consumed;
+  const consumed = await billingRepository.countAiGenerationsThisMonth(userId);
+  return consumed < limit;
 }
 
 export async function recordAiGeneration(userId: string) {

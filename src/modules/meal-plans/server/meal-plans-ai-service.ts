@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { recipe } from "@/lib/db/schema";
 import { handleServiceError } from "@/lib/trpc/utils";
+import * as billingService from "@/modules/billing/server/billing-service";
 import type { RecipesGetMany } from "@/modules/recipes/types";
 import type { MealData } from "../types";
 
@@ -57,8 +58,17 @@ interface RecipeForAI {
 }
 
 export async function generateMealPlan(
-  input: GenerateMealPlanInput
+  input: GenerateMealPlanInput,
+  userId: string
 ): Promise<(MealData & { recipe: RecipesGetMany[0] })[]> {
+  const allowed = await billingService.canUseAiGeneration(userId);
+  if (!allowed) {
+    throw new TRPCError({
+      code: "PAYMENT_REQUIRED",
+      message: "AI generation limit reached. Upgrade to Pro to generate more meal plans.",
+    });
+  }
+
   const startDate = new Date(input.startDate);
   const endDate = new Date(input.endDate);
   const timeDiff = endDate.getTime() - startDate.getTime();
@@ -116,6 +126,8 @@ export async function generateMealPlan(
     for (const recipe of availableRecipes) {
       recipeMap.set(recipe.id, recipe);
     }
+
+    await billingService.recordAiGeneration(userId);
 
     return object.meals.map((meal, index) => {
       const recipe = recipeMap.get(meal.recipeId);

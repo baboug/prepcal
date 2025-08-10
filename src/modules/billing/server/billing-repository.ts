@@ -53,29 +53,25 @@ export async function recordAiGeneration(userId: string) {
 }
 
 export async function consumeAiGenerationWithinLimit(userId: string, limit: number): Promise<boolean> {
-  return await db.transaction(
-    async (tx) => {
-      const { start, end } = getCurrentMonthRange();
+  const { start, end } = getCurrentMonthRange();
+  const result = await db.execute<{ inserted: number }>(sql`
+    WITH c AS (
+      SELECT count(*)::int AS used
+      FROM ${usageEvent}
+      WHERE ${usageEvent.userId} = ${userId}
+        AND ${usageEvent.type} = 'ai_generate'
+        AND ${usageEvent.createdAt} BETWEEN ${start} AND ${end}
+    ),
+    ins AS (
+      INSERT INTO ${usageEvent} (user_id, type)
+      SELECT ${userId}, 'ai_generate'
+      FROM c
+      WHERE used < ${limit}
+      RETURNING 1
+    )
+    SELECT COALESCE((SELECT 1 FROM ins), 0) AS inserted;
+  `);
 
-      const [{ count }] = await tx
-        .select({ count: sql<number>`count(*)` })
-        .from(usageEvent)
-        .where(
-          and(
-            eq(usageEvent.userId, userId),
-            eq(usageEvent.type, "ai_generate"),
-            between(usageEvent.createdAt, start, end)
-          )
-        );
-
-      const used = Number(count ?? 0);
-      if (used >= limit) {
-        return false;
-      }
-
-      await tx.insert(usageEvent).values({ userId, type: "ai_generate" });
-      return true;
-    },
-    { isolationLevel: "serializable" as never }
-  );
+  const inserted = result.rows?.[0]?.inserted ?? 0;
+  return inserted === 1;
 }
