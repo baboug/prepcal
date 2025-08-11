@@ -1,48 +1,154 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## PrepCal
 
-## Getting Started
+AI-powered meal planning SaaS. PrepCal automates weekly meal planning based on your goals and preferences, with real‑time nutrition, editable plans, and Pro features via Polar billing.
 
-First, run the development server:
+### Core features
+
+- Personalized nutrition profile and onboarding
+- AI meal plan generation from your recipe database and targets
+- Interactive edits: reordering, serving-size multipliers, add/remove meals
+- Shopping list and meal prep plan generation (editable)
+- Dashboard with charts and usage overview
+- Freemium gating with Polar Pro upgrades
+
+## Tech stack
+
+- Next.js 15 (App Router), React 19, TypeScript
+- tRPC + TanStack Query
+- Drizzle ORM (PostgreSQL; Neon compatible)
+- Better Auth (+ Polar plugin) with Google/GitHub OAuth
+- TailwindCSS + shadcn/ui
+- AI via `@ai-sdk/google` (Gemini)
+
+## Requirements
+
+- Node.js 20+
+- pnpm
+- PostgreSQL database (local or hosted, e.g. Neon)
+- Resend account for transactional emails
+- OAuth apps for Google and GitHub (for social sign‑in)
+- Polar account (Sandbox OK) for billing
+- Google Generative AI API key for Gemini
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local # if present; otherwise create .env.local (see below)
+pnpm db:push
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create `.env.local` at the repo root. Required variables are validated in `src/lib/env.ts`.
 
-## Learn More
+### App and Database
 
-To learn more about Next.js, take a look at the following resources:
+- `NEXT_PUBLIC_APP_URL` = `http://localhost:3000`
+- `DATABASE_URL` = Postgres connection string (Neon works). Example: `postgres://user:pass@host/db?sslmode=require`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Auth (Better Auth)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
 
-## Deploy on Vercel
+### Email (Resend)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL` = verified sender, e.g. `no-reply@yourdomain.com`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Billing Setup (Polar)
-
-Set these environment variables:
+### Billing (Polar)
 
 - `POLAR_ACCESS_TOKEN`
 - `POLAR_WEBHOOK_SECRET`
-- `POLAR_SERVER` ("sandbox" | "production")
-- `POLAR_PRO_PRODUCT_ID` (Product ID from Polar dashboard)
+- `POLAR_SERVER` = `sandbox` | `production` (use `sandbox` locally)
+- `POLAR_PRO_PRODUCT_ID` = your Pro product ID
 
-The Better Auth Polar plugin is configured in `src/lib/auth/index.ts` and the client in `src/lib/auth/auth-client.ts`.
-Users can manage their plan at `/billing`.
+### AI (Gemini)
+
+- `GOOGLE_GENERATIVE_AI_API_KEY` = key for `@ai-sdk/google`
+
+### Scripts (optional, for recipe seeding)
+
+- `SITEMAP_URL` (required for seeding)
+- `SCRAPE_CONCURRENCY` (default 5, max 10)
+- `BATCH_SIZE` (default 100)
+- `CLEAR_DATABASE` (`true`/`false`)
+
+## Database
+
+- Push schema and create tables:
+
+```bash
+pnpm db:push
+```
+
+- Inspect with Drizzle Studio:
+
+```bash
+pnpm db:studio
+```
+
+## Running the app
+
+```bash
+pnpm dev
+```
+
+## Seeding recipes (optional)
+
+Configure seeding vars above, then:
+
+```bash
+pnpm db:seed-recipes
+```
+
+See `src/modules/recipes/scripts/README.md` for details.
+
+## Emails
+
+- Real emails are sent via Resend (verification and password reset)
+- For local template preview:
+
+```bash
+pnpm email:dev
+```
+
+This runs the React Email preview server for templates under `src/modules/emails/templates`.
+
+## Testing
+
+```bash
+pnpm test
+```
+
+Vitest runs in a JSDOM environment.
+
+## Project structure (high level)
+
+- `src/app` app routes (App Router)
+- `src/modules/*` feature modules (server: router/service/repository; ui: components/hooks/views)
+- `src/lib` shared libraries (auth, db, trpc, env)
+- `src/components` reusable components (shadcn in `components/ui`)
+
+## Billing setup (Polar)
+
+Polar is integrated via Better Auth’s plugin in `src/lib/auth/index.ts`; the client plugin is in `src/lib/auth/auth-client.ts`. Users manage plans at `/billing`.
+
+Provide the Polar sandbox credentials and set `POLAR_SERVER=sandbox` for local dev. Webhooks are handled by the plugin; ensure `POLAR_WEBHOOK_SECRET` matches your Polar configuration when testing webhooks.
+
+## Troubleshooting
+
+- Database connection: ensure `DATABASE_URL` is a valid URL. For Neon, include `?sslmode=require` if needed.
+- Auth sign‑in: verify OAuth callback URLs match `NEXT_PUBLIC_APP_URL` in provider settings.
+- Emails: use a verified `RESEND_FROM_EMAIL`. For local development you can still run `pnpm email:dev` to preview templates.
+- AI: ensure `GOOGLE_GENERATIVE_AI_API_KEY` is set; Gemini is used by the AI meal plan generator.
+
+## Deployment
+
+Deploy to Vercel. Set all environment variables in the dashboard. The app uses App Router and server components by default.
