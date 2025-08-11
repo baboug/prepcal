@@ -33,7 +33,8 @@ AI-powered meal planning SaaS. PrepCal automates weekly meal planning based on y
 ## Quick start
 
 ```bash
-pnpm install
+corepack enable pnpm # ensures the right pnpm version
+pnpm install --frozen-lockfile
 cp .env.example .env.local # if present; otherwise create .env.local (see below)
 pnpm db:push
 pnpm dev
@@ -47,8 +48,9 @@ Create `.env.local` at the repo root. Required variables are validated in `src/l
 
 ### App and Database
 
-- `NEXT_PUBLIC_APP_URL` = `http://localhost:3000`
+- `NEXT_PUBLIC_APP_URL` = `http://localhost:3000` (local). In production, set to your HTTPS domain, e.g. `https://app.yourdomain.com`.
 - `DATABASE_URL` = Postgres connection string (Neon works). Example: `postgres://user:pass@host/db?sslmode=require`
+- For serverless Postgres (e.g. Neon), ensure SSL remains enabled and consider a connection pool if needed.
 
 ### Auth (Better Auth)
 
@@ -82,11 +84,13 @@ Create `.env.local` at the repo root. Required variables are validated in `src/l
 
 ## Database
 
-- Push schema and create tables:
+- Push schema and create tables (dev):
 
 ```bash
 pnpm db:push
 ```
+
+Note: For production, prefer migration-based workflows and run migrations during deploys to avoid destructive changes.
 
 - Inspect with Drizzle Studio:
 
@@ -109,11 +113,13 @@ pnpm db:seed-recipes
 ```
 
 See `src/modules/recipes/scripts/README.md` for details.
+Please respect source site robots.txt and terms of service. Tune SCRAPE_CONCURRENCY to avoid overloading upstreams.
 
 ## Emails
 
 - Real emails are sent via Resend (verification and password reset)
 - For local template preview:
+- In production, set up DNS (SPF, DKIM, DMARC) for your sending domain in Resend to improve deliverability.
 
 ```bash
 pnpm email:dev
@@ -152,3 +158,10 @@ Provide the Polar sandbox credentials and set `POLAR_SERVER=sandbox` for local d
 ## Deployment
 
 Deploy to Vercel. Set all environment variables in the dashboard. The app uses App Router and server components by default.
+
+Checklist:
+
+- Set `NEXT_PUBLIC_APP_URL` to your production HTTPS domain.
+- Ensure Node.js runtime is 20+ in project settings.
+- Run database migrations during deploys (avoid `db:push` in production).
+- Add Resend, OAuth, Polar, and AI keys to the production environment.
