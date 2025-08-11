@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import type { Session } from "@/lib/auth";
 import { useTRPC } from "@/lib/trpc/client";
 import { getUserFirstName } from "@/lib/utils";
-import { BillingOverviewCard } from "@/modules/billing/ui/components/billing-overview-card";
 import { DailyRecipesCarousel } from "@/modules/dashboard/ui/components/daily-recipes-carousel";
 import { MacroDistributionChart } from "@/modules/dashboard/ui/components/macro-distribution-chart";
 import { NutritionOverviewChart } from "@/modules/dashboard/ui/components/nutrition-overview-chart";
