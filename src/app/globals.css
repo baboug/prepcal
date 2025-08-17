@@ -138,20 +138,20 @@
   --shadow-2xs: 2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-xs: 2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-sm:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 1px 2px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 1px 2px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 1px 2px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 1px 2px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-md:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 2px 4px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 2px 4px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-lg:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 4px 6px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 4px 6px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-xl:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 8px 10px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 8px 10px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-2xl: 2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0);
   --tracking-normal: 0em;
 }
@@ -214,26 +214,29 @@
   --shadow-2xs: 2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-xs: 2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-sm:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 1px 2px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 1px 2px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 1px 2px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 1px 2px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-md:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 2px 4px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 2px 4px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-lg:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 4px 6px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 4px 6px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-xl:
-    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0), 2px 8px 10px -1px
-    hsl(254.8993 86.1272% 66.0784% / 0);
+    2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0),
+    2px 8px 10px -1px hsl(254.8993 86.1272% 66.0784% / 0);
   --shadow-2xl: 2px 2px 4px 0px hsl(254.8993 86.1272% 66.0784% / 0);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;

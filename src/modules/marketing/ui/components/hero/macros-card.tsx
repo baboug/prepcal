@@ -3,7 +3,7 @@ import { CircleCheckIcon } from "lucide-react";
 export function MacrosCard() {
   return (
     <div className="relative h-full flex-1 rounded-lg border border-muted p-6">
-      <div className="absolute inset-0 rounded-xl [background:radial-gradient(125%_125%_at_50%_0%,transparent_40%,var(--color-orange-600),var(--color-white)_100%)]" />
+      <div className="absolute inset-0 rounded-xl" />
       <div className="flex h-full flex-col justify-between text-foreground">
         <div className="space-y-6">
           <h3 className="font-semibold text-xl">Smart Macro Tracking</h3>
@@ -22,18 +22,18 @@ export function MacrosCard() {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex items-center justify-between rounded-lg bg-black/5 p-3 backdrop-blur-md">
+        <div className="mt-6 flex items-center justify-between rounded-lg bg-gradient-to-br from-muted via-muted/50 to-primary/25 p-3 backdrop-blur-md dark:from-muted/50 dark:via-muted/25 dark:to-primary/15">
           <div className="text-center">
-            <div className="text-white text-xs">Protein</div>
-            <div className="font-semibold text-lg text-white">180g</div>
+            <div className="text-xs">Protein</div>
+            <div className="font-semibold text-lg ">180g</div>
           </div>
           <div className="text-center">
-            <div className="text-white text-xs">Carbs</div>
-            <div className="font-semibold text-lg text-white">220g</div>
+            <div className="text-xs">Carbs</div>
+            <div className="font-semibold text-lg ">220g</div>
           </div>
           <div className="text-center">
-            <div className="text-white text-xs">Fat</div>
-            <div className="font-semibold text-lg text-white">65g</div>
+            <div className="text-xs">Fat</div>
+            <div className="font-semibold text-lg ">65g</div>
           </div>
         </div>
       </div>

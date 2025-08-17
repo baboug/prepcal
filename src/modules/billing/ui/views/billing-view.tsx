@@ -33,7 +33,13 @@ export function BillingView() {
               </div>
               <hr className="border-dashed" />
               <ul className="list-outside space-y-3 text-sm">
-                {["3 meal plans per month", "3 AI generations per month", "Manual plan editing"].map((item, index) => (
+                {[
+                  "3 AI generated meal plans",
+                  "Manual meal planning",
+                  "Recipe import from websites",
+                  "Basic nutrition tracking",
+                  "All diet protocols",
+                ].map((item, index) => (
                   <li className="flex items-center gap-2" key={index}>
                     <CheckIcon className="size-3" /> {item}
                   </li>
@@ -64,14 +70,21 @@ export function BillingView() {
                       await authClient.checkout({ slug: "pro" });
                     }}
                   >
-                    Get Started
+                    Unlock Pro features
                   </Button>
                 )}
               </div>
               <div>
                 <div className="font-semibold text-sm">Everything in Free plus :</div>
                 <ul className="mt-4 list-outside space-y-3 text-sm">
-                  {["Higher meal plan limits", "Higher AI generation limits", "Priority support"].map((item, index) => (
+                  {[
+                    "Unlimited AI meal plan generation",
+                    "AI-assisted Meal prep optimization",
+                    "Advanced nutrition analytics",
+                    "Shopping list generation",
+                    "Custom recipe creation",
+                    "Priority customer support",
+                  ].map((item, index) => (
                     <li className="flex items-center gap-2" key={index}>
                       <CheckIcon className="size-3" /> {item}
                     </li>
